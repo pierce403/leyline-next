@@ -21,7 +21,7 @@ export async function getSystemHealth(): Promise<ServiceHealth[]> {
       status: "ok",
       details: "Supabase/Postgres reachable",
     });
-  } catch (error) {
+  } catch {
     results.push({
       name: "Database",
       status: "error",
@@ -61,4 +61,3 @@ export async function getSystemHealth(): Promise<ServiceHealth[]> {
 
   return results;
 }
-
