@@ -63,9 +63,10 @@ export default function AdminSettingsPage() {
             <code>https://leyline.app/roles</code>).
           </li>
           <li>
-            `AUTH0_ADMIN_ROLES` – comma-separated list of roles that grant
-            access to the admin area (default:{" "}
-            <code>Sales,Owner,ContentAdmin,Admin,SuperAdmin,Master</code>).
+            Users with the role <code>admin</code> (in the configured roles
+            claim) are granted access to the Leyline admin area. You can
+            optionally override this list via the `AUTH0_ADMIN_ROLES`
+            environment variable.
           </li>
         </ul>
         <p className="text-gray-700">
@@ -100,4 +101,3 @@ export default function AdminSettingsPage() {
     </div>
   );
 }
-

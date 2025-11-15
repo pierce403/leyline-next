@@ -10,7 +10,7 @@ const ADMIN_ROLES: string[] = rawAdminRoles
       .split(",")
       .map((role) => role.trim())
       .filter(Boolean)
-  : [];
+  : ["admin"];
 
 export function getUserRolesFromSession(session: SessionData): string[] {
   const claimValue = (session.user as Record<string, unknown>)[
@@ -36,11 +36,6 @@ export function getUserRolesFromSession(session: SessionData): string[] {
 
 export function userHasAdminAccess(session: SessionData): boolean {
   const roles = getUserRolesFromSession(session);
-  // If no admin roles are configured, treat all authenticated users as admins.
-  if (ADMIN_ROLES.length === 0) {
-    return true;
-  }
-
   if (roles.length === 0) {
     return false;
   }
