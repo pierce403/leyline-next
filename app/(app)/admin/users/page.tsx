@@ -1,6 +1,10 @@
-import { prisma } from "@/lib/prisma";
+import {
+  fetchAuth0Users,
+  updateAuth0UserMembership,
+  type Auth0User,
+} from "@/lib/auth0-management";
 
-const MEMBERSHIP_LEVELS = ["FREE", "BASIC", "PRO"] as const;
+const MEMBERSHIP_LEVELS = ["free", "basic", "pro"] as const;
 type MembershipLevel = (typeof MEMBERSHIP_LEVELS)[number];
 
 async function updateMembership(formData: FormData) {
@@ -16,43 +20,15 @@ async function updateMembership(formData: FormData) {
     return;
   }
 
-  await prisma.subscription.updateMany({
-    where: { userId },
-    data: { status: "CANCELED" },
-  });
-
-  await prisma.subscription.create({
-    data: {
-      userId,
-      plan,
-      status: "ACTIVE",
-    },
-  });
+  await updateAuth0UserMembership(userId, plan);
 }
 
-type UserWithMemberships = Awaited<
-  ReturnType<typeof prisma.user.findMany>
->[number] & {
-  memberships: Awaited<
-    ReturnType<typeof prisma.subscription.findMany>
-  >;
-};
-
 export default async function AdminUsersPage() {
-  let users: UserWithMemberships[] | null = null;
+  let users: Auth0User[] | null = null;
   let loadError: Error | null = null;
 
   try {
-    users = await prisma.user.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 50,
-      include: {
-        memberships: {
-          orderBy: { createdAt: "desc" },
-          take: 1,
-        },
-      },
-    });
+    users = await fetchAuth0Users(50);
   } catch (error) {
     loadError = error as Error;
   }
@@ -120,56 +96,57 @@ export default async function AdminUsersPage() {
                   className="px-3 py-4 text-center text-xs text-gray-500"
                 >
                   {users
-                    ? "No users found in the Leyline database yet."
-                    : "Unable to load users due to a database error."}
+                    ? "No Auth0 users found for this tenant yet."
+                    : "Unable to load users due to an Auth0 Management API error."}
                 </td>
               </tr>
             ) : (
               users.map((user) => {
-                const membership = user.memberships[0];
-                const currentPlan: MembershipLevel =
-                  (membership?.plan as MembershipLevel | undefined) ?? "FREE";
+                const rawMembership =
+                  user.app_metadata?.membership?.toString().toLowerCase() ??
+                  "free";
+                const currentPlan: MembershipLevel = MEMBERSHIP_LEVELS.includes(
+                  rawMembership as MembershipLevel,
+                )
+                  ? (rawMembership as MembershipLevel)
+                  : "free";
 
                 return (
                   <tr
-                    key={user.id}
+                    key={user.user_id}
                     className="odd:bg-white even:bg-gray-50 align-top"
                   >
                     <td className="border-t px-3 py-2">
-                      {user.firstName || user.lastName
-                        ? `${user.firstName ?? ""} ${
-                            user.lastName ?? ""
-                          }`.trim()
-                        : "—"}
+                      {user.name ?? "—"}
                     </td>
                     <td className="border-t px-3 py-2">
                       {user.email ?? "—"}
                     </td>
                     <td className="border-t px-3 py-2">
-                      {user.alias ?? "—"}
+                      {user.user_id ?? "—"}
                     </td>
                     <td className="border-t px-3 py-2">
-                      {currentPlan === "FREE"
+                      {currentPlan === "free"
                         ? "Free"
-                        : currentPlan === "BASIC"
+                        : currentPlan === "basic"
                           ? "Basic"
                           : "Pro"}
                     </td>
-                    <td className="border-t px-3 py-2">{user.status}</td>
-                    <td className="border-t px-3 py-2">
-                      {user.createdAt.toISOString()}
-                    </td>
                     <td className="border-t px-3 py-2">
                       <form action={updateMembership} className="space-y-1">
-                        <input type="hidden" name="userId" value={user.id} />
+                        <input
+                          type="hidden"
+                          name="userId"
+                          value={user.user_id}
+                        />
                         <select
                           name="membership"
                           defaultValue={currentPlan}
                           className="w-full rounded border border-gray-300 px-2 py-1 text-[11px]"
                         >
-                          <option value="FREE">Free</option>
-                          <option value="BASIC">Basic</option>
-                          <option value="PRO">Pro</option>
+                          <option value="free">Free</option>
+                          <option value="basic">Basic</option>
+                          <option value="pro">Pro</option>
                         </select>
                         <button
                           type="submit"
