@@ -22,6 +22,7 @@ High-level implementation tasks derived from `TRANSITION_PLAN.md`.
 - [ ] Handle Stripe webhooks to keep local membership state in sync.
 - [ ] Expose membership info in `/account/subscriptions` and in the navbar badge.
 - [x] Add read-only admin views for legacy PayPal subscriptions and transactions (no webhooks yet).
+- [x] Scaffold PayPal webhook handler at `/api/paypal/webhook` (verification + logging only).
 
 ## Education & Content
 

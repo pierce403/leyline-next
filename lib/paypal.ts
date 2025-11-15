@@ -37,7 +37,7 @@ function getPayPalEnv(): PayPalEnvironment {
   return normalized === "sandbox" ? "sandbox" : "live";
 }
 
-function getPayPalBaseUrl(): string {
+export function getPayPalBaseUrl(): string {
   const env = getPayPalEnv();
   return env === "sandbox"
     ? "https://api-m.sandbox.paypal.com"
@@ -50,7 +50,7 @@ export function isPayPalConfigured(): boolean {
   );
 }
 
-async function getPayPalAccessToken(): Promise<string> {
+export async function getPayPalAccessToken(): Promise<string> {
   const clientId = process.env.PAYPAL_CLIENT_ID;
   const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
 
@@ -240,4 +240,3 @@ export function summarizeSubscriptionsFromTransactions(
     return aTime < bTime ? 1 : aTime > bTime ? -1 : 0;
   });
 }
-

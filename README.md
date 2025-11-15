@@ -74,6 +74,7 @@ As Auth0, Stripe, Supabase, and the database are wired up, the app will expect (
   - `PAYPAL_CLIENT_ID`
   - `PAYPAL_CLIENT_SECRET`
   - `PAYPAL_ENV` (`live` or `sandbox`, defaults to `live`)
+  - `PAYPAL_WEBHOOK_ID` (optional, used to verify incoming webhooks at `/api/paypal/webhook`)
 - Supabase / Database:
   - `POSTGRES_PRISMA_URL` (primary Prisma connection string; Supabase “Prisma” URL)
   - `POSTGRES_URL`, `POSTGRES_URL_NON_POOLING`, etc. (created by Supabase or Vercel integrations)
