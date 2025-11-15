@@ -53,8 +53,19 @@ async function updateCourseAction(formData: FormData) {
 export default async function AdminCourseEditPage({
   params,
 }: AdminCourseEditPageProps) {
+  const courseId = params?.courseId;
+
+  if (typeof courseId !== "string" || courseId.length === 0) {
+    // Log for debugging; treat as a 404 to avoid Prisma errors.
+    console.error(
+      "AdminCourseEditPage: missing or invalid courseId route param",
+      params,
+    );
+    notFound();
+  }
+
   const course = await prisma.educationCourse.findUnique({
-    where: { id: params.courseId },
+    where: { id: courseId },
   });
 
   if (!course) {
