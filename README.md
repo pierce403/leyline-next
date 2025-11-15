@@ -70,6 +70,10 @@ As Auth0, Stripe, Supabase, and the database are wired up, the app will expect (
   - `STRIPE_WEBHOOK_SECRET`
   - `STRIPE_BASIC_PRICE_ID`
   - `STRIPE_PRO_PRICE_ID`
+- Legacy PayPal (optional, read-only admin views):
+  - `PAYPAL_CLIENT_ID`
+  - `PAYPAL_CLIENT_SECRET`
+  - `PAYPAL_ENV` (`live` or `sandbox`, defaults to `live`)
 - Supabase / Database:
   - `POSTGRES_PRISMA_URL` (primary Prisma connection string; Supabase “Prisma” URL)
   - `POSTGRES_URL`, `POSTGRES_URL_NON_POOLING`, etc. (created by Supabase or Vercel integrations)

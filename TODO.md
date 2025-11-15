@@ -21,6 +21,7 @@ High-level implementation tasks derived from `TRANSITION_PLAN.md`.
 - [ ] Implement subscription creation, plan changes, and cancellation flows.
 - [ ] Handle Stripe webhooks to keep local membership state in sync.
 - [ ] Expose membership info in `/account/subscriptions` and in the navbar badge.
+- [x] Add read-only admin views for legacy PayPal subscriptions and transactions (no webhooks yet).
 
 ## Education & Content
 
