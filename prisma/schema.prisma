@@ -123,6 +123,7 @@ model EducationCourse {
   lessons          EducationLesson[]    @relation("CourseLessons")
   links            EducationLink[]
   courseProgress   UserEducationCourse[]
+  importLogs       EducationImportLog[]
 
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
@@ -339,4 +340,17 @@ model InvestmentReminder {
   dueAt         DateTime
 
   investment    Investment  @relation(fields: [investmentId], references: [id], onDelete: Cascade)
+}
+
+/// Audit log entry for education course imports (e.g., from edpak files).
+model EducationImportLog {
+  id               String           @id @default(uuid())
+  courseId         String
+  course           EducationCourse  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  summary          String
+  details          String?
+  manifestJson     String?
+
+  createdAt        DateTime         @default(now())
 }

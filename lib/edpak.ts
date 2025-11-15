@@ -10,6 +10,21 @@ type ManifestModule = {
   order?: number;
 };
 
+type ManifestLesson = {
+  id: string;
+  moduleId?: string;
+  title?: string;
+  type?: string;
+};
+
+type ManifestFile = {
+  id: string;
+  fileName?: string;
+  contentType?: string;
+  size?: number;
+  path?: string;
+};
+
 type EdpakManifest = {
   title: string;
   version: string;
@@ -17,6 +32,12 @@ type EdpakManifest = {
   description?: string;
   language?: string;
   modules: ManifestModule[];
+  lessons?: ManifestLesson[];
+  files?: ManifestFile[];
+  missingFiles?: string[];
+  // Additional metadata keys from the spec are preserved in manifestJson.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
 };
 
 export async function importEdpakCourse(file: File): Promise<string> {
@@ -109,6 +130,76 @@ export async function importEdpakCourse(file: File): Promise<string> {
         sortOrder: 0,
       },
     });
+  }
+
+  const lessonCount = Array.isArray(manifest.lessons)
+    ? manifest.lessons.length
+    : sortedModules.length;
+  const quizCount = Array.isArray(manifest.lessons)
+    ? manifest.lessons.filter((lesson) => {
+        const type = lesson.type?.toLowerCase() ?? "";
+        return type === "multiplechoice" || type === "multiple_choice";
+      }).length
+    : 0;
+  const fileCount = Array.isArray(manifest.files) ? manifest.files.length : 0;
+  const imageCount = Array.isArray(manifest.files)
+    ? manifest.files.filter((file) =>
+        (file.contentType ?? "").toLowerCase().startsWith("image/"),
+      ).length
+    : 0;
+  const videoCount = Array.isArray(manifest.files)
+    ? manifest.files.filter((file) =>
+        (file.contentType ?? "").toLowerCase().startsWith("video/"),
+      ).length
+    : 0;
+  const missingFileCount = Array.isArray(manifest.missingFiles)
+    ? manifest.missingFiles.length
+    : 0;
+
+  const summaryParts = [
+    `Imported course "${manifest.title}"`,
+    `modules=${sortedModules.length}`,
+    `lessons=${lessonCount}`,
+    `quizzes=${quizCount}`,
+    `files=${fileCount}`,
+    `images=${imageCount}`,
+    `videos=${videoCount}`,
+  ];
+
+  if (missingFileCount > 0) {
+    summaryParts.push(`missingFiles=${missingFileCount}`);
+  }
+
+  const summary = summaryParts.join(", ");
+
+  const detailsObject = {
+    title: manifest.title,
+    version: manifest.version,
+    author: manifest.author,
+    description: manifest.description ?? null,
+    language: manifest.language ?? null,
+    modules: sortedModules.length,
+    lessons: lessonCount,
+    quizzes: quizCount,
+    files: fileCount,
+    images: imageCount,
+    videos: videoCount,
+    missingFiles: missingFileCount,
+  };
+
+  try {
+    await prisma.educationImportLog.create({
+      data: {
+        courseId: course.id,
+        summary,
+        details: JSON.stringify(detailsObject, null, 2),
+        manifestJson: manifestText,
+      },
+    });
+  } catch (error) {
+    // If the import log table does not exist yet (e.g., migration not applied),
+    // do not fail the entire import; just log the issue for later inspection.
+    console.error("Failed to write EducationImportLog entry", error);
   }
 
   return course.id;
