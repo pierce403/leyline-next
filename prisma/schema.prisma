@@ -1,0 +1,343 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  /// Uses the Supabase non-pooling URL (recommended for Prisma Migrate).
+  url      = env("POSTGRES_URL_NON_POOLING")
+}
+
+/// User of the Leyline application. Mirrors Auth0 user metadata.
+model User {
+  id                    String                  @id @default(uuid())
+  auth0UserId           String                  @unique(map: "idx_user_auth0_user_id")
+  alias                 String                  @unique
+  email                 String                  @unique
+  firstName             String?
+  lastName              String?
+  photoUrl              String?
+  status                UserStatus              @default(ACTIVE)
+  accessType            UserAccessType          @default(NONE)
+  investmentGoals       String[]
+  investmentStrategies  String[]
+  investmentPreferences String[]
+  investmentCriteria    String[]
+  professionalExperience String?
+  education             String?
+  awards                String?
+  isAccredited          Boolean                 @default(false)
+
+  // Membership / subscriptions
+  memberships           Subscription[]
+
+  // Education progress
+  programProgress       UserEducationProgram[]
+  courseProgress        UserEducationCourse[]
+  lessonProgress        UserEducationLesson[]
+
+  // Portfolio
+  investments           Investment[]
+
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+}
+
+enum UserStatus {
+  INACTIVE
+  SUSPENDED
+  ACTIVE
+}
+
+enum UserAccessType {
+  NONE
+  USER
+  PRO
+  SALES
+  OWNER
+  CONTENT_ADMIN
+  ADMIN
+  SUPER_ADMIN
+  MASTER
+}
+
+/// Logical membership level for gating content.
+enum MembershipLevel {
+  FREE
+  BASIC
+  PRO
+}
+
+/// Stripe-backed subscription record.
+model Subscription {
+  id                  String              @id @default(uuid())
+  userId              String
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId    String?
+  stripeSubscriptionId String?            @unique(map: "idx_subscription_stripe_subscription_id")
+  plan                MembershipLevel
+  status              SubscriptionStatus
+  currentPeriodStart  DateTime?
+  currentPeriodEnd    DateTime?
+
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+}
+
+enum SubscriptionStatus {
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+}
+
+/// Education program (group of courses).
+model EducationProgram {
+  id             String               @id @default(uuid())
+  name           String
+  description    String?
+  status         EducationStatus      @default(DEVELOPMENT)
+  coverImageUrl  String?
+
+  courses        ProgramCourse[]
+  programProgress UserEducationProgram[]
+
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+}
+
+/// Individual education course.
+model EducationCourse {
+  id               String               @id @default(uuid())
+  name             String
+  description      String?
+  status           EducationStatus      @default(DEVELOPMENT)
+  coverImageUrl    String?
+  requiredLevel    MembershipLevel      @default(FREE)
+
+  programs         ProgramCourse[]
+  modules          CourseModule[]
+  lessons          EducationLesson[]    @relation("CourseLessons")
+  links            EducationLink[]
+  courseProgress   UserEducationCourse[]
+
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+}
+
+enum EducationStatus {
+  DEVELOPMENT
+  FREE
+  BASIC
+  PRO
+  DELETED
+}
+
+/// Module within a course.
+model EducationModule {
+  id             String               @id @default(uuid())
+  name           String
+  description    String?
+  status         ModuleStatus         @default(ACTIVE)
+  coverImageUrl  String?
+
+  courses        CourseModule[]
+  lessons        ModuleLesson[]
+
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+}
+
+enum ModuleStatus {
+  ACTIVE
+  DELETED
+}
+
+/// Individual lesson within a module/course.
+model EducationLesson {
+  id             String                 @id @default(uuid())
+  name           String
+  description    String?
+  status         LessonStatus           @default(ACTIVE)
+  contentType    LessonContentType      @default(NONE)
+  content        String?
+
+  modules        ModuleLesson[]
+  course         EducationCourse?       @relation("CourseLessons", fields: [courseId], references: [id])
+  courseId       String?
+
+  userProgress   UserEducationLesson[]
+
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+}
+
+enum LessonStatus {
+  ACTIVE
+  DELETED
+}
+
+enum LessonContentType {
+  NONE
+  IMAGE
+  VIDEO
+  HTML
+  TEXT
+  MULTIPLE_CHOICE
+}
+
+/// Join table for programs and courses with explicit ordering.
+model ProgramCourse {
+  id         String            @id @default(uuid())
+  programId  String
+  courseId   String
+  sortOrder  Int               @default(0)
+
+  program    EducationProgram  @relation(fields: [programId], references: [id], onDelete: Cascade)
+  course     EducationCourse   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([programId, courseId])
+}
+
+/// Join table for courses and modules with ordering.
+model CourseModule {
+  id         String            @id @default(uuid())
+  courseId   String
+  moduleId   String
+  sortOrder  Int               @default(0)
+
+  course     EducationCourse   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  module     EducationModule   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, moduleId])
+}
+
+/// Join table for modules and lessons with ordering.
+model ModuleLesson {
+  id         String            @id @default(uuid())
+  moduleId   String
+  lessonId   String
+  sortOrder  Int               @default(0)
+
+  module     EducationModule   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  lesson     EducationLesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([moduleId, lessonId])
+}
+
+/// Mapping between application locations and recommended courses.
+model EducationLink {
+  id          String            @id @default(uuid())
+  location    String
+  courseId    String
+
+  course      EducationCourse   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+/// Per-user progress for a program.
+model UserEducationProgram {
+  id                    String              @id @default(uuid())
+  userId                String
+  programId             String
+  percentCompleted      Float               @default(0)
+  latestActionTimestamp DateTime?
+
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  program               EducationProgram    @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, programId])
+}
+
+/// Per-user progress for a course.
+model UserEducationCourse {
+  id                    String              @id @default(uuid())
+  userId                String
+  courseId              String
+  percentCompleted      Float               @default(0)
+  latestActionTimestamp DateTime?
+
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course                EducationCourse     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}
+
+/// Per-user progress for a lesson.
+model UserEducationLesson {
+  id                    String              @id @default(uuid())
+  userId                String
+  lessonId              String
+  status                LessonProgressStatus @default(NOT_STARTED)
+  lastViewedTimestamp   DateTime?
+
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson                EducationLesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+}
+
+enum LessonProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+/// Company that users can add to their portfolio.
+model Company {
+  id          String        @id @default(uuid())
+  name        String
+  type        String?
+  notes       String?
+  tags        String[]
+
+  investments Investment[]
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+/// Individual investment associated with a user and company.
+model Investment {
+  id             String               @id @default(uuid())
+  userId         String
+  companyId      String
+  investmentType String
+  owned          Float
+  shares         Boolean              @default(true)
+  mock           Boolean              @default(false)
+  value          Float                @default(0)
+
+  user           User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company        Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  transactions   InvestmentTransaction[]
+  reminders      InvestmentReminder[]
+
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+}
+
+/// Transaction for a given investment.
+model InvestmentTransaction {
+  id            String      @id @default(uuid())
+  investmentId  String
+  transactionType String
+  amount        Float
+  quantity      Float?
+  occurredAt    DateTime
+
+  investment    Investment  @relation(fields: [investmentId], references: [id], onDelete: Cascade)
+}
+
+/// Reminder tied to an investment.
+model InvestmentReminder {
+  id            String      @id @default(uuid())
+  investmentId  String
+  content       String
+  dueAt         DateTime
+
+  investment    Investment  @relation(fields: [investmentId], references: [id], onDelete: Cascade)
+}

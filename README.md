@@ -57,24 +57,53 @@ This project is structured to deploy directly on Vercel from the repo root:
 
 ### Environment Variables (Planned)
 
-As Auth0, Stripe, and the database are wired up, the app will expect (at minimum) variables like:
+As Auth0, Stripe, Supabase, and the database are wired up, the app will expect (at minimum) variables like:
 
 - Auth0:
-  - `AUTH0_ISSUER_BASE_URL`
   - `AUTH0_CLIENT_ID`
   - `AUTH0_CLIENT_SECRET`
-  - `AUTH0_BASE_URL`
+  - `AUTH0_DOMAIN`
+  - `AUTH0_SECRET`
+  - `APP_BASE_URL`
 - Stripe:
   - `STRIPE_SECRET_KEY`
   - `STRIPE_WEBHOOK_SECRET`
   - `STRIPE_BASIC_PRICE_ID`
   - `STRIPE_PRO_PRICE_ID`
-- Database:
-  - `DATABASE_URL`
+- Supabase / Database:
+  - `POSTGRES_URL_NON_POOLING` (primary Prisma connection string; Supabase non-pooling URL)
+  - `POSTGRES_PRISMA_URL`, `POSTGRES_URL`, etc. (created by Vercel’s Supabase integration)
+  - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (for client-side Supabase usage)
+  - `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `SUPABASE_URL` (server-side only; never exposed to the client)
 - Storage:
-  - Vercel Blob or other storage configuration (names TBD during implementation).
+  - Vercel Blob:
+    - `BLOB_READ_WRITE_TOKEN` (for server-side uploads)
+    - `BLOB_READ_ONLY_TOKEN` (optional, for read-only contexts)
 
 These will be documented more precisely as those integrations are implemented.
+
+### Database Setup (Local)
+
+Prisma is configured to use PostgreSQL via the `POSTGRES_PRISMA_URL` environment variable, matching Vercel’s Supabase defaults.
+
+1. Create a local or remote PostgreSQL database (for example, `leyline`).
+2. Copy `.env.example` to `.env` and set `POSTGRES_PRISMA_URL` accordingly, e.g.:
+
+   ```bash
+   POSTGRES_PRISMA_URL="postgresql://username:password@localhost:5432/leyline?schema=public"
+   ```
+
+3. Run Prisma migrations once you are ready:
+
+   ```bash
+   pnpm prisma:migrate --name init
+   ```
+
+4. (Optional) Regenerate the Prisma client after schema changes:
+
+   ```bash
+   pnpm prisma:generate
+   ```
 
 ## Transition Plan
 

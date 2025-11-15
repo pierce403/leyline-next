@@ -4,9 +4,9 @@ High-level implementation tasks derived from `TRANSITION_PLAN.md`.
 
 ## Infrastructure & Core
 
-- [ ] Wire up Prisma with PostgreSQL and define the core domain schema (users, memberships, subscriptions, education, companies, investments).
-- [ ] Configure Vercel Blob storage for media assets (course images/videos).
-- [ ] Add environment variable validation and configuration bootstrap (e.g., per-environment config module).
+- [x] Wire up Prisma with PostgreSQL and define the core domain schema (users, memberships, subscriptions, education, companies, investments).
+- [x] Configure Vercel Blob storage for media assets (course images/videos).
+- [x] Add environment variable validation and configuration bootstrap (e.g., per-environment config module).
 
 ## Authentication & Authorization
 
@@ -41,4 +41,3 @@ High-level implementation tasks derived from `TRANSITION_PLAN.md`.
 - [ ] Add unit and integration tests for critical server logic (auth, billing, import).
 - [ ] Add basic component tests for key pages and layouts.
 - [ ] Set up CI (GitHub Actions) to run `pnpm lint`, `pnpm test`, and `pnpm build` on pull requests.
-

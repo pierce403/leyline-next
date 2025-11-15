@@ -1,6 +1,8 @@
-import Link from "next/link";
+import { isAuth0Configured } from "@/lib/auth0";
 
 export default function LoginPage() {
+  const authConfigured = isAuth0Configured();
+
   return (
     <div className="w-full">
       <div className="mb-6 text-center">
@@ -8,55 +10,38 @@ export default function LoginPage() {
           Login to Your Account
         </h1>
       </div>
-      <form className="space-y-4">
-        <div className="space-y-1 text-sm">
-          <label className="flex items-center justify-between text-gray-700">
-            <span>Email</span>
-          </label>
-          <input
-            type="email"
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-leyline-blue focus:outline-none focus:ring-1 focus:ring-leyline-blue"
-          />
+
+      {!authConfigured ? (
+        <div className="rounded border border-yellow-300 bg-yellow-50 p-4 text-sm text-yellow-900">
+          Auth0 has not been configured yet. Once configuration is complete, you
+          will be able to sign in securely from this page.
         </div>
-        <div className="space-y-1 text-sm">
-          <label className="flex items-center justify-between text-gray-700">
-            <span>Password</span>
-            <Link
-              href="/forgot-password"
-              className="text-xs text-leyline-blue hover:underline"
+      ) : (
+        <div className="space-y-4">
+          <p className="text-sm text-gray-700">
+            Sign in to Leyline using secure Auth0 authentication.
+          </p>
+          <a
+            href="/auth/login"
+            className="flex w-full items-center justify-center rounded bg-leyline-primary px-3 py-2 text-sm font-semibold text-white hover:bg-lime-600"
+          >
+            Sign In
+          </a>
+          <div className="text-center text-sm text-gray-600">
+            Don&apos;t have an account yet?{" "}
+            <a
+              href="/auth/login?screen_hint=signup"
+              className="text-leyline-blue hover:underline"
             >
-              Forgot password?
-            </Link>
-          </label>
-          <input
-            type="password"
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-leyline-blue focus:outline-none focus:ring-1 focus:ring-leyline-blue"
-          />
+              Sign Up
+            </a>
+          </div>
+          <div className="text-center text-xs text-gray-500">
+            Forgot your password? Use the Auth0 password reset flow from the
+            sign-in screen.
+          </div>
         </div>
-        <div className="flex items-center gap-2 text-sm">
-          <input
-            id="remember"
-            type="checkbox"
-            className="h-4 w-4 rounded border-gray-300 text-leyline-primary focus:ring-leyline-primary"
-          />
-          <label htmlFor="remember" className="text-gray-700">
-            Remember me
-          </label>
-        </div>
-        <button
-          type="submit"
-          className="mt-2 w-full rounded bg-leyline-primary px-3 py-2 text-sm font-semibold text-white hover:bg-lime-600"
-        >
-          Sign In
-        </button>
-      </form>
-      <p className="mt-4 text-center text-sm text-gray-600">
-        Don&apos;t have an account yet?{" "}
-        <Link href="/register" className="text-leyline-blue hover:underline">
-          Sign Up
-        </Link>
-      </p>
+      )}
     </div>
   );
 }
-
