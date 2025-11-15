@@ -3,6 +3,12 @@ import { isAuth0Configured } from "@/lib/auth0";
 export default function LoginPage() {
   const authConfigured = isAuth0Configured();
 
+  const googleConnection =
+    process.env.AUTH0_GOOGLE_CONNECTION ?? "google-oauth2";
+  const appleConnection = process.env.AUTH0_APPLE_CONNECTION ?? "apple";
+  const ethereumConnection =
+    process.env.AUTH0_ETHEREUM_CONNECTION ?? "siwe-ethereum";
+
   return (
     <div className="w-full">
       <div className="mb-6 text-center">
@@ -14,32 +20,46 @@ export default function LoginPage() {
       {!authConfigured ? (
         <div className="rounded border border-yellow-300 bg-yellow-50 p-4 text-sm text-yellow-900">
           Auth0 has not been configured yet. Once configuration is complete, you
-          will be able to sign in securely from this page.
+          will be able to sign in securely from this page using your existing
+          identity provider.
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-5">
           <p className="text-sm text-gray-700">
-            Sign in to Leyline using secure Auth0 authentication.
+            Sign in to Leyline using an existing account. No Leyline-specific
+            passwords are stored.
           </p>
-          <a
-            href="/auth/login"
-            className="flex w-full items-center justify-center rounded bg-leyline-primary px-3 py-2 text-sm font-semibold text-white hover:bg-lime-600"
-          >
-            Sign In
-          </a>
-          <div className="text-center text-sm text-gray-600">
-            Don&apos;t have an account yet?{" "}
+          <div className="space-y-3">
             <a
-              href="/auth/login?screen_hint=signup"
-              className="text-leyline-blue hover:underline"
+              href={`/auth/login?connection=${encodeURIComponent(
+                googleConnection,
+              )}`}
+              className="flex w-full items-center justify-center rounded border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50"
             >
-              Sign Up
+              Continue with Google
+            </a>
+            <a
+              href={`/auth/login?connection=${encodeURIComponent(
+                appleConnection,
+              )}`}
+              className="flex w-full items-center justify-center rounded border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50"
+            >
+              Continue with Apple
+            </a>
+            <a
+              href={`/auth/login?connection=${encodeURIComponent(
+                ethereumConnection,
+              )}`}
+              className="flex w-full items-center justify-center rounded border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50"
+            >
+              Continue with Ethereum
             </a>
           </div>
-          <div className="text-center text-xs text-gray-500">
-            Forgot your password? Use the Auth0 password reset flow from the
-            sign-in screen.
-          </div>
+          <p className="text-center text-xs text-gray-500">
+            Account creation and password management are handled entirely by
+            your chosen provider (Google, Apple, or Ethereum wallet). Leyline
+            never stores your password.
+          </p>
         </div>
       )}
     </div>
