@@ -1,7 +1,8 @@
 import type { SessionData } from "@auth0/nextjs-auth0/types";
 
 const DEFAULT_ROLES_CLAIM =
-  process.env.AUTH0_ROLES_CLAIM || "https://leyline.app/roles";
+  process.env.AUTH0_ROLES_CLAIM ||
+  "https://leyline-next.vercel.app/claims/roles";
 
 const rawAdminRoles = process.env.AUTH0_ADMIN_ROLES;
 

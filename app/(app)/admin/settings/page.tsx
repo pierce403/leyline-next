@@ -60,7 +60,7 @@ export default function AdminSettingsPage() {
         <ul className="mb-3 list-disc space-y-1 pl-5 text-gray-700">
           <li>
             `AUTH0_ROLES_CLAIM` – claim key that contains user roles (default:{" "}
-            <code>https://leyline.app/roles</code>).
+            <code>https://leyline-next.vercel.app/claims/roles</code>).
           </li>
           <li>
             Users with the role <code>admin</code> (in the configured roles
