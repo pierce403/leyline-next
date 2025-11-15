@@ -19,7 +19,7 @@ export default async function AdminCoursesPage() {
         </p>
         <form
           action="/api/edpak/import"
-          method="POST"
+          method="post"
           encType="multipart/form-data"
         >
           <input
