@@ -32,7 +32,6 @@ export function AdminSidenav() {
           <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
             Education
           </div>
-          <AdminLink href="/admin/education/programs">Programs</AdminLink>
           <AdminLink href="/admin/education/courses">Courses</AdminLink>
           <AdminLink href="/admin/education/modules">Modules</AdminLink>
           <AdminLink href="/admin/education/links">Links</AdminLink>
@@ -70,4 +69,3 @@ function AdminLink({ href, children }: AdminLinkProps) {
     </Link>
   );
 }
-
