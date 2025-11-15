@@ -29,6 +29,7 @@ export default async function AdminLayout({
     | undefined;
 
   const userName = user?.name ?? user?.email ?? undefined;
+  const userEmail = user?.email ?? undefined;
   const userPictureUrl =
     typeof user?.picture === "string" && user.picture.length > 0
       ? user.picture
@@ -38,6 +39,7 @@ export default async function AdminLayout({
     <div className="flex min-h-screen flex-col bg-slate-100">
       <MainNavbar
         userName={userName}
+        userEmail={userEmail}
         userPictureUrl={userPictureUrl}
         membershipLabel="Leyline Free"
         showAdminLink
