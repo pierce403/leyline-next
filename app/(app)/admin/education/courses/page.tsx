@@ -1,16 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { importEdpakCourse } from "@/lib/edpak";
-
-async function importCourseAction(formData: FormData) {
-  "use server";
-
-  const file = formData.get("edpak") as File | null;
-  if (!file) {
-    throw new Error("No edpak file provided");
-  }
-
-  await importEdpakCourse(file);
-}
 
 export default async function AdminCoursesPage() {
   const courses = await prisma.educationCourse.findMany({
@@ -29,7 +17,11 @@ export default async function AdminCoursesPage() {
           Upload an <code>.edpak</code> file (ZIP archive with a manifest.json)
           to create a new course, modules, and lessons in Leyline.
         </p>
-        <form action={importCourseAction} encType="multipart/form-data">
+        <form
+          action="/api/edpak/import"
+          method="POST"
+          encType="multipart/form-data"
+        >
           <input
             type="file"
             name="edpak"
@@ -98,4 +90,3 @@ export default async function AdminCoursesPage() {
     </div>
   );
 }
-

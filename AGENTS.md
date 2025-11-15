@@ -54,3 +54,10 @@ Before finishing any substantial change:
 - Keep `TODO.md` in sync with the current state of the project.
   - When you complete a task listed there, update the corresponding checkbox.
   - When you add significant new work items, add them to `TODO.md` in the appropriate section.
+
+## Git Workflow
+
+- At the end of each self-contained update or feature change:
+  - Ensure `pnpm lint`, `pnpm test`, and `pnpm build` have been run (when relevant).
+  - Commit the changes with a concise, descriptive message.
+  - Push the commit to the default remote branch so GitHub and Vercel stay in sync.
