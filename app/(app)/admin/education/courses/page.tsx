@@ -2,10 +2,21 @@ import { prisma } from "@/lib/prisma";
 import { EdpakImportForm } from "./EdpakImportForm";
 
 export default async function AdminCoursesPage() {
-  const courses = await prisma.educationCourse.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 50,
-  });
+  let courses: Awaited<
+    ReturnType<typeof prisma.educationCourse.findMany>
+  > = [];
+  let loadError: Error | null = null;
+
+  try {
+    courses = await prisma.educationCourse.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
+  } catch (error) {
+    // Log full error so we can inspect it in Vercel logs.
+    console.error("AdminCoursesPage: failed to load courses", error);
+    loadError = error instanceof Error ? error : new Error(String(error));
+  }
 
   return (
     <div className="space-y-6">
@@ -22,6 +33,14 @@ export default async function AdminCoursesPage() {
       </section>
       <section className="rounded border bg-white p-4 text-sm shadow-sm">
         <h2 className="mb-2 font-semibold text-gray-800">Existing Courses</h2>
+        {loadError && (
+          <div className="mb-3 rounded border border-red-300 bg-red-50 p-3 text-xs text-red-800">
+            <p className="font-semibold">Database error</p>
+            <pre className="mt-1 whitespace-pre-wrap break-all">
+              {`${loadError.message}\n\n${loadError.stack ?? ""}`}
+            </pre>
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="min-w-full border-collapse text-xs">
             <thead className="bg-gray-50">
