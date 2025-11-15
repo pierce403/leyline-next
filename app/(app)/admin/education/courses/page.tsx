@@ -1,5 +1,22 @@
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { EdpakImportForm } from "./EdpakImportForm";
+
+async function deleteCourseAction(formData: FormData) {
+  "use server";
+
+  const courseId = formData.get("courseId");
+  if (typeof courseId !== "string" || courseId.length === 0) {
+    return;
+  }
+
+  await prisma.educationCourse.delete({
+    where: { id: courseId },
+  });
+
+  revalidatePath("/admin/education/courses");
+  revalidatePath("/education");
+}
 
 export default async function AdminCoursesPage() {
   let courses: Awaited<
@@ -57,6 +74,9 @@ export default async function AdminCoursesPage() {
                 <th className="border-b px-3 py-2 text-left font-semibold text-gray-700">
                   Created
                 </th>
+                <th className="border-b px-3 py-2 text-left font-semibold text-gray-700">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -75,13 +95,40 @@ export default async function AdminCoursesPage() {
                     key={course.id}
                     className="odd:bg-white even:bg-gray-50 align-top"
                   >
-                    <td className="border-t px-3 py-2">{course.name}</td>
-                    <td className="border-t px-3 py-2">{course.status}</td>
-                    <td className="border-t px-3 py-2">
+                    <td className="border-t px-3 py-2 align-middle">
+                      {course.name}
+                    </td>
+                    <td className="border-t px-3 py-2 align-middle">
+                      {course.status}
+                    </td>
+                    <td className="border-t px-3 py-2 align-middle">
                       {course.requiredLevel}
                     </td>
-                    <td className="border-t px-3 py-2">
+                    <td className="border-t px-3 py-2 align-middle">
                       {course.createdAt.toISOString()}
+                    </td>
+                    <td className="border-t px-3 py-2 align-middle">
+                      <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                        <a
+                          href={`/admin/education/courses/${course.id}`}
+                          className="rounded border border-gray-300 px-2 py-0.5 font-semibold text-gray-700 hover:bg-gray-50"
+                        >
+                          Edit
+                        </a>
+                        <form action={deleteCourseAction}>
+                          <input
+                            type="hidden"
+                            name="courseId"
+                            value={course.id}
+                          />
+                          <button
+                            type="submit"
+                            className="rounded border border-red-300 px-2 py-0.5 font-semibold text-red-700 hover:bg-red-50"
+                          >
+                            Delete
+                          </button>
+                        </form>
+                      </div>
                     </td>
                   </tr>
                 ))
