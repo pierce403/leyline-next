@@ -71,8 +71,8 @@ As Auth0, Stripe, Supabase, and the database are wired up, the app will expect (
   - `STRIPE_BASIC_PRICE_ID`
   - `STRIPE_PRO_PRICE_ID`
 - Supabase / Database:
-  - `POSTGRES_URL_NON_POOLING` (primary Prisma connection string; Supabase non-pooling URL)
-  - `POSTGRES_PRISMA_URL`, `POSTGRES_URL`, etc. (created by Vercel’s Supabase integration)
+  - `POSTGRES_PRISMA_URL` (primary Prisma connection string; Supabase “Prisma” URL)
+  - `POSTGRES_URL`, `POSTGRES_URL_NON_POOLING`, etc. (created by Supabase or Vercel integrations)
   - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (for client-side Supabase usage)
   - `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `SUPABASE_URL` (server-side only; never exposed to the client)
 - Storage:

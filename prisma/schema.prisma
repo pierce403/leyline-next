@@ -4,8 +4,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  /// Uses the Supabase non-pooling URL (recommended for Prisma Migrate).
-  url      = env("POSTGRES_URL_NON_POOLING")
+  /// Uses the Supabase Prisma URL (can be pooled or non-pooled).
+  url      = env("POSTGRES_PRISMA_URL")
 }
 
 /// User of the Leyline application. Mirrors Auth0 user metadata.

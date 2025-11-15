@@ -32,11 +32,10 @@ export type ServerConfig = {
 
 export const serverConfig: ServerConfig = {
   nodeEnv,
-  // Prisma itself reads POSTGRES_URL_NON_POOLING, but we expose it here
+  // Prisma itself reads POSTGRES_PRISMA_URL, but we expose it here
   // for any direct DB tools that might need the connection string.
-  databaseUrl: requireEnv("POSTGRES_URL_NON_POOLING"),
+  databaseUrl: requireEnv("POSTGRES_PRISMA_URL"),
   supabaseUrl: requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
   supabaseAnonKey: requireEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
   blobReadWriteToken: optionalEnv("BLOB_READ_WRITE_TOKEN"),
 };
-

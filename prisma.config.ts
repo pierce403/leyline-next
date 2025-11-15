@@ -8,7 +8,7 @@ export default defineConfig({
   },
   engine: "classic",
   datasource: {
-    // Use the Supabase non-pooling URL for migrations and the client.
-    url: env("POSTGRES_URL_NON_POOLING"),
+    // Use the Supabase Prisma URL for migrations and the client.
+    url: env("POSTGRES_PRISMA_URL"),
   },
 });
