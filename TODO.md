@@ -10,10 +10,10 @@ High-level implementation tasks derived from `TRANSITION_PLAN.md`.
 
 ## Authentication & Authorization
 
-- [ ] Integrate Auth0 using the official Next.js SDK.
-- [ ] Implement login/logout, session handling, and route protection for `(app)` and `admin` areas.
+- [x] Integrate Auth0 using the official Next.js SDK.
+- [x] Implement login/logout, session handling, and route protection for `(app)` and `admin` areas.
 - [ ] Map Auth0 roles and app_metadata to Leyline access types (Free, Basic, Pro, Sales, Owner, ContentAdmin, Admin, SuperAdmin, Master).
-- [ ] Build an admin setup wizard (under `/admin/settings`) to guide initial Auth0 configuration.
+- [x] Build an admin setup wizard (under `/admin/settings`) to guide initial Auth0 configuration.
 
 ## Billing (Stripe)
 

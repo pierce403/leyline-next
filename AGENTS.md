@@ -49,3 +49,8 @@ Before finishing any substantial change:
 - All secrets should flow through environment variables and, in production, Vercel project settings.
 - Be careful when handling anything related to **Auth0**, **Stripe**, or user PII; follow `SECURITY.md`.
 
+## Task Tracking
+
+- Keep `TODO.md` in sync with the current state of the project.
+  - When you complete a task listed there, update the corresponding checkbox.
+  - When you add significant new work items, add them to `TODO.md` in the appropriate section.
