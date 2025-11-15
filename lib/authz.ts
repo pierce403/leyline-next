@@ -40,5 +40,8 @@ export function userHasAdminAccess(session: SessionData): boolean {
     return false;
   }
 
-  return roles.some((role) => ADMIN_ROLES.includes(role));
+  const adminLower = ADMIN_ROLES.map((role) => role.toLowerCase());
+  return roles
+    .map((role) => role.toLowerCase())
+    .some((role) => adminLower.includes(role));
 }

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { MainNavbar } from "@/components/layout/main-navbar";
 import { AdminSidenav } from "@/components/layout/admin-sidenav";
 import { getAuth0Session, isAuth0Configured } from "@/lib/auth0";
-import { userHasAdminAccess } from "@/lib/authz";
+import { getUserRolesFromSession, userHasAdminAccess } from "@/lib/authz";
 
 export default async function AdminLayout({
   children,
@@ -34,6 +34,7 @@ export default async function AdminLayout({
     typeof user?.picture === "string" && user.picture.length > 0
       ? user.picture
       : undefined;
+  const userRoles = session ? getUserRolesFromSession(session) : undefined;
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-100">
@@ -41,6 +42,7 @@ export default async function AdminLayout({
         userName={userName}
         userEmail={userEmail}
         userPictureUrl={userPictureUrl}
+        userRoles={userRoles}
         membershipLabel="Leyline Free"
         showAdminLink
       />

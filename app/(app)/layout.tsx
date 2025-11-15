@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { MainNavbar } from "@/components/layout/main-navbar";
 import { getAuth0Session, isAuth0Configured } from "@/lib/auth0";
-import { userHasAdminAccess } from "@/lib/authz";
+import { getUserRolesFromSession, userHasAdminAccess } from "@/lib/authz";
 
 export default async function AppLayout({
   children,
@@ -30,6 +30,7 @@ export default async function AppLayout({
       ? user.picture
       : undefined;
 
+  const userRoles = session ? getUserRolesFromSession(session) : undefined;
   const showAdminLink = !!(session && userHasAdminAccess(session));
 
   return (
@@ -38,6 +39,7 @@ export default async function AppLayout({
         userName={userName}
         userEmail={userEmail}
         userPictureUrl={userPictureUrl}
+        userRoles={userRoles}
         membershipLabel="Leyline Free"
         showAdminLink={showAdminLink}
       />
