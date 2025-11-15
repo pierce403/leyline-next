@@ -16,7 +16,6 @@ async function updateMembership(formData: FormData) {
     return;
   }
 
-  // Mark existing subscriptions as canceled and create a new active one.
   await prisma.subscription.updateMany({
     where: { userId },
     data: { status: "CANCELED" },
@@ -31,17 +30,32 @@ async function updateMembership(formData: FormData) {
   });
 }
 
+type UserWithMemberships = Awaited<
+  ReturnType<typeof prisma.user.findMany>
+>[number] & {
+  memberships: Awaited<
+    ReturnType<typeof prisma.subscription.findMany>
+  >;
+};
+
 export default async function AdminUsersPage() {
-  const users = await prisma.user.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 50,
-    include: {
-      memberships: {
-        orderBy: { createdAt: "desc" },
-        take: 1,
+  let users: UserWithMemberships[] | null = null;
+  let loadError: Error | null = null;
+
+  try {
+    users = await prisma.user.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 50,
+      include: {
+        memberships: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+        },
       },
-    },
-  });
+    });
+  } catch (error) {
+    loadError = error as Error;
+  }
 
   return (
     <div className="space-y-4">
@@ -53,6 +67,24 @@ export default async function AdminUsersPage() {
         currently reflects users stored in the Leyline database; synchronization
         with Auth0 and Stripe will be added in a later iteration.
       </p>
+      {loadError && (
+        <div className="rounded border border-red-300 bg-red-50 p-3 text-xs text-red-800">
+          <div className="mb-1 font-semibold">Database error</div>
+          <div className="mb-2 whitespace-pre-wrap break-all">
+            {loadError.message}
+          </div>
+          {loadError.stack && (
+            <details className="mt-1">
+              <summary className="cursor-pointer text-[11px] font-semibold">
+                Show stack trace
+              </summary>
+              <pre className="mt-1 whitespace-pre-wrap break-all text-[11px]">
+                {loadError.stack}
+              </pre>
+            </details>
+          )}
+        </div>
+      )}
       <div className="overflow-x-auto rounded border bg-white shadow-sm">
         <table className="min-w-full border-collapse text-xs">
           <thead className="bg-gray-50">
@@ -81,13 +113,15 @@ export default async function AdminUsersPage() {
             </tr>
           </thead>
           <tbody>
-            {users.length === 0 ? (
+            {!users || users.length === 0 ? (
               <tr>
                 <td
                   colSpan={7}
                   className="px-3 py-4 text-center text-xs text-gray-500"
                 >
-                  No users found in the Leyline database yet.
+                  {users
+                    ? "No users found in the Leyline database yet."
+                    : "Unable to load users due to a database error."}
                 </td>
               </tr>
             ) : (
