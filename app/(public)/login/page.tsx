@@ -1,7 +1,8 @@
-import { isAuth0Configured } from "@/lib/auth0";
+import { getMissingAuth0EnvVars, isAuth0Configured } from "@/lib/auth0";
 
 export default function LoginPage() {
   const authConfigured = isAuth0Configured();
+  const missingEnv = getMissingAuth0EnvVars();
 
   const googleConnection =
     process.env.AUTH0_GOOGLE_CONNECTION ?? "google-oauth2";
@@ -19,9 +20,22 @@ export default function LoginPage() {
 
       {!authConfigured ? (
         <div className="rounded border border-yellow-300 bg-yellow-50 p-4 text-sm text-yellow-900">
-          Auth0 has not been configured yet. Once configuration is complete, you
-          will be able to sign in securely from this page using your existing
-          identity provider.
+          <p className="mb-2">
+            Auth0 is not fully configured for this environment. Before users
+            can sign in, ensure the following environment variables are set in
+            Vercel for this project:
+          </p>
+          <ul className="mb-2 list-disc pl-5">
+            {missingEnv.map((name) => (
+              <li key={name}>
+                <code>{name}</code>
+              </li>
+            ))}
+          </ul>
+          <p>
+            After updating the variables, redeploy the application and return to
+            this page to sign in using your existing identity provider.
+          </p>
         </div>
       ) : (
         <div className="space-y-5">

@@ -2,7 +2,7 @@
 import type { SessionData } from "@auth0/nextjs-auth0/types";
 import { Auth0Client } from "@auth0/nextjs-auth0/server";
 
-const REQUIRED_AUTH0_ENV_VARS = [
+export const REQUIRED_AUTH0_ENV_VARS = [
   "AUTH0_DOMAIN",
   "AUTH0_CLIENT_ID",
   "AUTH0_CLIENT_SECRET",
@@ -10,19 +10,28 @@ const REQUIRED_AUTH0_ENV_VARS = [
   "APP_BASE_URL",
 ] as const;
 
-export function isAuth0Configured(): boolean {
-  return REQUIRED_AUTH0_ENV_VARS.every((name) => {
+export function getMissingAuth0EnvVars(): string[] {
+  return REQUIRED_AUTH0_ENV_VARS.filter((name) => {
     const value = process.env[name];
-    return typeof value === "string" && value.length > 0;
+    return typeof value !== "string" || value.length === 0;
   });
+}
+
+export function isAuth0Configured(): boolean {
+  return getMissingAuth0EnvVars().length === 0;
 }
 
 let auth0Client: Auth0Client | null = null;
 
 export function getAuth0Client(): Auth0Client {
   if (!isAuth0Configured()) {
+    const missing = getMissingAuth0EnvVars();
     throw new Error(
-      "Auth0 is not configured. Set AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET, AUTH0_SECRET, and APP_BASE_URL, then retry.",
+      missing.length === 0
+        ? "Auth0 is not configured. Required environment variables are missing."
+        : `Auth0 is not configured. Missing environment variables: ${missing.join(
+            ", ",
+          )}`,
     );
   }
 
