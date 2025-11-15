@@ -22,6 +22,10 @@ export async function GET() {
     "https://leyline-next.vercel.app/claims/roles";
 
   return NextResponse.json({
+    // WARNING: idToken is exposed here only for debugging.
+    // Remove this field once you are done inspecting tokens.
+    idToken: (session as unknown as { tokenSet?: { idToken?: string } })
+      .tokenSet?.idToken,
     rolesClaimKey,
     roles,
     // Expose only non-sensitive user fields useful for debugging roles.
@@ -34,4 +38,3 @@ export async function GET() {
     },
   });
 }
-
