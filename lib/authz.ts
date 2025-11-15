@@ -66,7 +66,7 @@ function readRolesFromSession(session: SessionData): string[] {
 
 export function getUserRolesFromSession(session: SessionData): string[] {
   const roles = readRolesFromSession(session);
-  return roles.length > 0 ? roles : ["free"];
+  return roles;
 }
 
 export function userHasAdminAccess(session: SessionData): boolean {
