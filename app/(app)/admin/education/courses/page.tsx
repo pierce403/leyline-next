@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { EdpakImportForm } from "./EdpakImportForm";
 
 export default async function AdminCoursesPage() {
   const courses = await prisma.educationCourse.findMany({
@@ -17,24 +18,7 @@ export default async function AdminCoursesPage() {
           Upload an <code>.edpak</code> file (ZIP archive with a manifest.json)
           to create a new course, modules, and lessons in Leyline.
         </p>
-        <form
-          action="/api/edpak/import"
-          method="post"
-          encType="multipart/form-data"
-        >
-          <input
-            type="file"
-            name="edpak"
-            accept=".edpak,application/zip"
-            className="mb-2 block text-xs text-gray-700"
-          />
-          <button
-            type="submit"
-            className="rounded bg-leyline-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-lime-600"
-          >
-            Import Course
-          </button>
-        </form>
+        <EdpakImportForm />
       </section>
       <section className="rounded border bg-white p-4 text-sm shadow-sm">
         <h2 className="mb-2 font-semibold text-gray-800">Existing Courses</h2>
