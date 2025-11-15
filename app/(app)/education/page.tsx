@@ -1,40 +1,6 @@
-import { redirect } from "next/navigation";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateCurrentUser } from "@/lib/current-user";
-
-async function startOrContinueCourseAction(formData: FormData) {
-  "use server";
-
-  const courseId = formData.get("courseId");
-  if (typeof courseId !== "string" || courseId.length === 0) {
-    throw new Error("Missing courseId");
-  }
-
-  const user = await getOrCreateCurrentUser();
-  if (!user) {
-    redirect("/login");
-  }
-
-  await prisma.userEducationCourse.upsert({
-    where: {
-      userId_courseId: {
-        userId: user.id,
-        courseId,
-      },
-    },
-    update: {
-      latestActionTimestamp: new Date(),
-    },
-    create: {
-      userId: user.id,
-      courseId,
-      percentCompleted: 0,
-      latestActionTimestamp: new Date(),
-    },
-  });
-
-  redirect(`/education/course/${courseId}`);
-}
 
 export default async function EducationOverviewPage() {
   const user = await getOrCreateCurrentUser();
@@ -115,25 +81,18 @@ export default async function EducationOverviewPage() {
                   )}
                 </div>
                 <div className="mt-3 flex items-center justify-between">
-                  <form action={startOrContinueCourseAction}>
-                    <input
-                      type="hidden"
-                      name="courseId"
-                      value={course.id}
-                    />
-                    <button
-                      type="submit"
-                      className="rounded bg-leyline-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-lime-600"
-                    >
-                      {primaryLabel}
-                    </button>
-                  </form>
-                  <a
+                  <Link
+                    href={`/education/course/${course.id}`}
+                    className="rounded bg-leyline-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-lime-600"
+                  >
+                    {primaryLabel}
+                  </Link>
+                  <Link
                     href={`/education/course/${course.id}`}
                     className="text-[11px] font-semibold text-leyline-primary hover:underline"
                   >
                     View details
-                  </a>
+                  </Link>
                 </div>
               </article>
             );
@@ -143,4 +102,3 @@ export default async function EducationOverviewPage() {
     </div>
   );
 }
-
