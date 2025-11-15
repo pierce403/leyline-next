@@ -6,8 +6,8 @@ export default function LoginPage() {
   const googleConnection =
     process.env.AUTH0_GOOGLE_CONNECTION ?? "google-oauth2";
   const appleConnection = process.env.AUTH0_APPLE_CONNECTION ?? "apple";
-  const ethereumConnection =
-    process.env.AUTH0_ETHEREUM_CONNECTION ?? "siwe-ethereum";
+  const ethereumConnection = process.env.AUTH0_ETHEREUM_CONNECTION;
+  const showEthereum = Boolean(ethereumConnection);
 
   return (
     <div className="w-full">
@@ -46,14 +46,16 @@ export default function LoginPage() {
             >
               Continue with Apple
             </a>
-            <a
-              href={`/auth/login?connection=${encodeURIComponent(
-                ethereumConnection,
-              )}`}
-              className="flex w-full items-center justify-center rounded border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50"
-            >
-              Continue with Ethereum
-            </a>
+            {showEthereum && (
+              <a
+                href={`/auth/login?connection=${encodeURIComponent(
+                  ethereumConnection as string,
+                )}`}
+                className="flex w-full items-center justify-center rounded border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50"
+              >
+                Continue with Ethereum
+              </a>
+            )}
           </div>
           <p className="text-center text-xs text-gray-500">
             Account creation and password management are handled entirely by
