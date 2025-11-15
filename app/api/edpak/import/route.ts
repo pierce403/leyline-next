@@ -13,9 +13,16 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!file.name.toLowerCase().endsWith(".edpak")) {
+  const fileName = file.name ?? "";
+  const lowerName = fileName.toLowerCase();
+
+  // Allow both `.edpak` and plain `.zip` uploads for now.
+  if (!lowerName.endsWith(".edpak") && !lowerName.endsWith(".zip")) {
     return NextResponse.json(
-      { error: "File must have a .edpak extension" },
+      {
+        error:
+          "File must have a .edpak or .zip extension",
+      },
       { status: 400 },
     );
   }
@@ -48,4 +55,3 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.redirect(new URL("/admin/education/courses", req.url));
 }
-
