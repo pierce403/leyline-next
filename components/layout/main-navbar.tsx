@@ -11,10 +11,23 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
-export function MainNavbar() {
-  // TODO: Wire up real user state, membership level, and admin visibility.
-  const membershipLabel = "Leyline Free";
-  const showAdminLink = true;
+export type MainNavbarProps = {
+  userName?: string;
+  userPictureUrl?: string;
+  membershipLabel?: string;
+  showAdminLink?: boolean;
+};
+
+export function MainNavbar({
+  userName,
+  userPictureUrl,
+  membershipLabel = "Leyline Free",
+  showAdminLink = false,
+}: MainNavbarProps) {
+  const initial =
+    userName?.trim()?.[0]?.toUpperCase() ??
+    userName?.trim()?.[0] ??
+    undefined;
 
   return (
     <header className="border-b bg-white">
@@ -42,13 +55,22 @@ export function MainNavbar() {
           <span className="rounded-full bg-leyline-blue px-3 py-1 text-xs font-semibold text-white">
             {membershipLabel}
           </span>
-          <button
-            type="button"
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-xs font-semibold text-gray-700"
-            aria-label="User menu"
-          >
-            U
-          </button>
+          {userPictureUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={userPictureUrl}
+              alt={userName ?? "User avatar"}
+              className="h-8 w-8 rounded-full object-cover"
+            />
+          ) : (
+            <button
+              type="button"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-xs font-semibold text-gray-700"
+              aria-label="User menu"
+            >
+              {initial ?? "U"}
+            </button>
+          )}
         </nav>
       </div>
     </header>
@@ -76,4 +98,3 @@ function NavLink({ href, icon, label }: NavLinkProps) {
 function Separator() {
   return <span className="text-gray-300">|</span>;
 }
-

@@ -3,13 +3,14 @@ import type { SessionData } from "@auth0/nextjs-auth0/types";
 const DEFAULT_ROLES_CLAIM =
   process.env.AUTH0_ROLES_CLAIM || "https://leyline.app/roles";
 
-const ADMIN_ROLES: string[] = (
-  process.env.AUTH0_ADMIN_ROLES ??
-  "Sales,Owner,ContentAdmin,Admin,SuperAdmin,Master"
-)
-  .split(",")
-  .map((role) => role.trim())
-  .filter(Boolean);
+const rawAdminRoles = process.env.AUTH0_ADMIN_ROLES;
+
+const ADMIN_ROLES: string[] = rawAdminRoles
+  ? rawAdminRoles
+      .split(",")
+      .map((role) => role.trim())
+      .filter(Boolean)
+  : [];
 
 export function getUserRolesFromSession(session: SessionData): string[] {
   const claimValue = (session.user as Record<string, unknown>)[
@@ -35,6 +36,11 @@ export function getUserRolesFromSession(session: SessionData): string[] {
 
 export function userHasAdminAccess(session: SessionData): boolean {
   const roles = getUserRolesFromSession(session);
+  // If no admin roles are configured, treat all authenticated users as admins.
+  if (ADMIN_ROLES.length === 0) {
+    return true;
+  }
+
   if (roles.length === 0) {
     return false;
   }

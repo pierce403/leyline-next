@@ -20,9 +20,28 @@ export default async function AdminLayout({
     redirect("/");
   }
 
+  const user = session?.user as
+    | {
+        name?: string;
+        email?: string;
+        picture?: string;
+      }
+    | undefined;
+
+  const userName = user?.name ?? user?.email ?? undefined;
+  const userPictureUrl =
+    typeof user?.picture === "string" && user.picture.length > 0
+      ? user.picture
+      : undefined;
+
   return (
     <div className="flex min-h-screen flex-col bg-slate-100">
-      <MainNavbar />
+      <MainNavbar
+        userName={userName}
+        userPictureUrl={userPictureUrl}
+        membershipLabel="Leyline Free"
+        showAdminLink
+      />
       <div className="mx-auto flex w-full max-w-6xl flex-1 px-4 py-6">
         <AdminSidenav />
         <main className="flex-1 pl-6">{children}</main>
