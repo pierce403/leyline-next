@@ -67,7 +67,8 @@ export async function fetchAuth0Users(limit = 50): Promise<Auth0User[]> {
   const { domain } = getManagementEnv();
 
   const res = await fetch(
-    `https://${domain}/api/v2/users?per_page=${limit}&sort=-created_at`,
+    // Sort by newest first. Auth0 expects "field:order" where order is 1 or -1.
+    `https://${domain}/api/v2/users?per_page=${limit}&sort=created_at:-1`,
     {
       headers: {
         authorization: `Bearer ${token}`,
@@ -114,4 +115,3 @@ export async function updateAuth0UserMembership(
     );
   }
 }
-
