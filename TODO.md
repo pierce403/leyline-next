@@ -15,11 +15,11 @@ High-level implementation tasks derived from `TRANSITION_PLAN.md`.
 - [ ] Map Auth0 roles and app_metadata to Leyline access types (Free, Basic, Pro, Sales, Owner, ContentAdmin, Admin, SuperAdmin, Master).
 - [x] Build an admin setup wizard (under `/admin/settings`) to guide initial Auth0 configuration.
 
-## Billing (Stripe)
+## Billing (PayPal)
 
-- [ ] Integrate Stripe for subscriptions (`leyline_basic`, `leyline_pro`).
-- [ ] Implement subscription creation, plan changes, and cancellation flows.
-- [ ] Handle Stripe webhooks to keep local membership state in sync.
+- [ ] Integrate PayPal for subscriptions (mapping legacy plans like `leyline_basic`, `leyline_pro` to PayPal products/plans).
+- [ ] Implement subscription creation, plan changes, and cancellation flows using PayPal.
+- [ ] Handle PayPal webhooks to keep local membership state in sync.
 - [ ] Expose membership info in `/account/subscriptions` and in the navbar badge.
 - [x] Add read-only admin views for legacy PayPal subscriptions and transactions (no webhooks yet).
 - [x] Scaffold PayPal webhook handler at `/api/paypal/webhook` (verification + logging only).

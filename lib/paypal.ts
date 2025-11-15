@@ -109,7 +109,9 @@ export async function listRecentPayPalTransactions(
   const accessToken = await getPayPalAccessToken();
 
   const end = new Date();
-  const start = new Date(end.getTime() - days * 24 * 60 * 60 * 1000);
+  // PayPal reporting API only allows a maximum range of 31 days.
+  const effectiveDays = Math.max(1, Math.min(days, 31));
+  const start = new Date(end.getTime() - effectiveDays * 24 * 60 * 60 * 1000);
 
   const startIso = toIso8601(start);
   const endIso = toIso8601(end);
