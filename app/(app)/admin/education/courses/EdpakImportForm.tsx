@@ -1,12 +1,11 @@
 'use client';
 
-import type { MouseEvent } from "react";
+import type { ChangeEvent, MouseEvent } from "react";
 import { useRef, useState } from "react";
 
 type Status = "idle" | "selecting" | "uploading";
 
 export function EdpakImportForm() {
-  const formRef = useRef<HTMLFormElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [status, setStatus] = useState<Status>("idle");
 
@@ -14,14 +13,14 @@ export function EdpakImportForm() {
     event.preventDefault();
     setStatus("selecting");
     console.log("[EdpakImport] Import button clicked");
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
+    fileInputRef.current?.click();
   };
 
-  const handleFileChange = () => {
-    const input = fileInputRef.current;
-    if (!input || !input.files || input.files.length === 0) {
+  const handleFileChange = async (
+    event: ChangeEvent<HTMLInputElement>,
+  ): Promise<void> => {
+    const input = event.target;
+    if (!input.files || input.files.length === 0) {
       console.log("[EdpakImport] No file selected");
       setStatus("idle");
       return;
@@ -34,21 +33,49 @@ export function EdpakImportForm() {
       file.type,
       file.size,
     );
+
     setStatus("uploading");
 
-    if (formRef.current) {
-      formRef.current.requestSubmit();
+    try {
+      const formData = new FormData();
+      formData.append("edpak", file);
+
+      const response = await fetch("/api/edpak/import", {
+        method: "POST",
+        body: formData,
+      });
+
+      console.log(
+        "[EdpakImport] Upload response",
+        response.status,
+        response.statusText,
+      );
+
+      if (response.redirected) {
+        window.location.href = response.url;
+        return;
+      }
+
+      const contentType = response.headers.get("content-type") ?? "";
+      if (contentType.includes("application/json")) {
+        const data = await response.json();
+        console.error("[EdpakImport] Import failed", data);
+      } else {
+        console.error("[EdpakImport] Import failed with non-JSON response");
+      }
+    } catch (error) {
+      console.error("[EdpakImport] Unexpected error during upload", error);
+    } finally {
+      setStatus("idle");
+      // Clear the file input so the same file can be selected again if needed.
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
   return (
-    <form
-      ref={formRef}
-      action="/api/edpak/import"
-      method="post"
-      encType="multipart/form-data"
-      className="flex flex-col gap-2"
-    >
+    <div className="flex flex-col gap-2">
       <input
         ref={fileInputRef}
         type="file"
@@ -65,7 +92,6 @@ export function EdpakImportForm() {
       >
         {status === "uploading" ? "Importing…" : "Import Course"}
       </button>
-    </form>
+    </div>
   );
 }
-
