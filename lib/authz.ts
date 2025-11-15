@@ -1,4 +1,5 @@
 import type { SessionData } from "@auth0/nextjs-auth0/types";
+import { Buffer } from "node:buffer";
 
 const DEFAULT_ROLES_CLAIM =
   process.env.AUTH0_ROLES_CLAIM ||
@@ -30,6 +31,34 @@ function readRolesFromSession(session: SessionData): string[] {
   const fallback = (session.user as Record<string, unknown>).roles;
   if (Array.isArray(fallback)) {
     return fallback.map((value) => String(value));
+  }
+
+  // If we didn't find roles on the user object, fall back to decoding them
+  // directly from the idToken. Some Auth0 configurations do not copy custom
+  // claims onto the session user object.
+  const anySession = session as unknown as {
+    tokenSet?: { idToken?: string };
+  };
+  const idToken = anySession.tokenSet?.idToken;
+  if (!idToken) {
+    return [];
+  }
+
+  try {
+    const [, payloadB64] = idToken.split(".");
+    const json = Buffer.from(payloadB64, "base64").toString("utf8");
+    const payload = JSON.parse(json) as Record<string, unknown>;
+    const tokenClaim = payload[DEFAULT_ROLES_CLAIM];
+
+    if (Array.isArray(tokenClaim)) {
+      return tokenClaim.map((value) => String(value));
+    }
+
+    if (typeof tokenClaim === "string" && tokenClaim.length > 0) {
+      return tokenClaim.split(",").map((role) => role.trim());
+    }
+  } catch {
+    // Ignore decode errors and fall through to no roles.
   }
 
   return [];
