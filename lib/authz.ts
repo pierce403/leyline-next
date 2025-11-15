@@ -12,7 +12,7 @@ const ADMIN_ROLES: string[] = rawAdminRoles
       .filter(Boolean)
   : ["admin"];
 
-export function getUserRolesFromSession(session: SessionData): string[] {
+function readRolesFromSession(session: SessionData): string[] {
   const claimValue = (session.user as Record<string, unknown>)[
     DEFAULT_ROLES_CLAIM
   ];
@@ -34,8 +34,13 @@ export function getUserRolesFromSession(session: SessionData): string[] {
   return [];
 }
 
+export function getUserRolesFromSession(session: SessionData): string[] {
+  const roles = readRolesFromSession(session);
+  return roles.length > 0 ? roles : ["free"];
+}
+
 export function userHasAdminAccess(session: SessionData): boolean {
-  const roles = getUserRolesFromSession(session);
+  const roles = readRolesFromSession(session);
   if (roles.length === 0) {
     return false;
   }

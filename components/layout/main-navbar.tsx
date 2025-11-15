@@ -169,6 +169,12 @@ function UserMenu({
             >
               Account Settings
             </Link>
+            <a
+              href="/auth/logout"
+              className="mt-1 block px-3 py-1.5 text-[11px] font-medium text-red-600 hover:bg-gray-50"
+            >
+              Log Out
+            </a>
           </div>
         </div>
       )}
