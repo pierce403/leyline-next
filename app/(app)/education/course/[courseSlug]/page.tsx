@@ -9,7 +9,15 @@ type CoursePageProps = {
 };
 
 export default async function CourseDetailPage({ params }: CoursePageProps) {
-  const courseId = params.courseSlug;
+  const courseId = params?.courseSlug;
+
+  if (typeof courseId !== "string" || courseId.length === 0) {
+    console.error(
+      "CourseDetailPage: missing or invalid courseSlug route param",
+      params,
+    );
+    notFound();
+  }
 
   const course = await prisma.educationCourse.findUnique({
     where: { id: courseId },
