@@ -74,7 +74,19 @@ export function EdpakImportForm() {
         console.error("[EdpakImport] Import failed with non-JSON response");
       }
     } catch (error) {
-      console.error("[EdpakImport] Unexpected error during upload", error);
+      let message = "Unexpected error while uploading course package.";
+      if (error instanceof Error) {
+        if (error.message.includes("blob already exists")) {
+          message =
+            "A file with this name has already been uploaded. Please try again with a different filename or contact support if this persists.";
+        } else {
+          message = error.message;
+        }
+      }
+      console.error("[EdpakImport] Upload error", { error, message });
+      if (typeof window !== "undefined") {
+        window.alert(message);
+      }
     } finally {
       setStatus("idle");
       if (fileInputRef.current) {
