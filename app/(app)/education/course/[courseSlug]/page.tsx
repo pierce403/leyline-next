@@ -2,19 +2,22 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateCurrentUser } from "@/lib/current-user";
 
+type CoursePageRouteParams = {
+  courseSlug: string;
+};
+
 type CoursePageProps = {
-  params: {
-    courseSlug: string;
-  };
+  params: CoursePageRouteParams | Promise<CoursePageRouteParams>;
 };
 
 export default async function CourseDetailPage({ params }: CoursePageProps) {
-  const courseId = params?.courseSlug;
+  const resolvedParams = await params;
+  const courseId = resolvedParams?.courseSlug;
 
   if (typeof courseId !== "string" || courseId.length === 0) {
     console.error(
       "CourseDetailPage: missing or invalid courseSlug route param",
-      params,
+      resolvedParams,
     );
     notFound();
   }
