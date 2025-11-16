@@ -1,4 +1,60 @@
+import path from "node:path";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import { revalidatePath } from "next/cache";
 import { getSystemHealth } from "@/lib/health";
+import {
+  RunMigrationsControl,
+  runMigrationsInitialState,
+  type MigrationActionState,
+} from "@/components/admin/run-migrations-control";
+
+const execFileAsync = promisify(execFile);
+
+async function runMigrationsAction(
+  _prevState: MigrationActionState,
+  _formData: FormData,
+): Promise<MigrationActionState> {
+  "use server";
+
+  void _prevState;
+  void _formData;
+
+  const isWindows = process.platform === "win32";
+  const prismaBinary = path.join(
+    process.cwd(),
+    "node_modules",
+    ".bin",
+    `prisma${isWindows ? ".cmd" : ""}`,
+  );
+
+  try {
+    const { stdout, stderr } = await execFileAsync(prismaBinary, [
+      "migrate",
+      "deploy",
+      "--schema",
+      path.join(process.cwd(), "prisma", "schema.prisma"),
+    ]);
+
+    const output = [stdout, stderr].filter(Boolean).join("\n").trim();
+    revalidatePath("/admin");
+    return {
+      ok: true,
+      message:
+        output.length > 0
+          ? output
+          : "Prisma migrations ran successfully. Check logs for more detail.",
+    };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to run migrations";
+    console.error("[AdminDashboard] Failed to run prisma migrate deploy", error);
+    return {
+      ok: false,
+      message,
+    };
+  }
+}
 
 export default async function AdminDashboardPage() {
   const health = await getSystemHealth();
@@ -33,6 +89,53 @@ export default async function AdminDashboardPage() {
               </span>
             </div>
             <div className="text-xs text-gray-700">{service.details}</div>
+            {service.name === "Database" && service.migrationStatus && (
+              <div className="mt-3 space-y-2 border-t pt-3 text-[11px] text-gray-700">
+                <div>
+                  <span className="font-semibold">Applied:</span>{" "}
+                  {service.migrationStatus.applied.length}
+                </div>
+                <div>
+                  <span className="font-semibold">Pending:</span>{" "}
+                  {service.migrationStatus.pending.length}
+                </div>
+                {service.migrationStatus.lastAppliedAt && (
+                  <div>
+                    <span className="font-semibold">Last applied:</span>{" "}
+                    {new Date(
+                      service.migrationStatus.lastAppliedAt,
+                    ).toLocaleString()}
+                  </div>
+                )}
+                {service.migrationStatus.pending.length > 0 && (
+                  <div>
+                    <div className="font-semibold">Pending migrations:</div>
+                    <ul className="list-disc space-y-0.5 pl-4">
+                      {service.migrationStatus.pending
+                        .slice(0, 5)
+                        .map((migration) => (
+                          <li key={migration}>{migration}</li>
+                        ))}
+                      {service.migrationStatus.pending.length > 5 && (
+                        <li>
+                          …and{" "}
+                          {service.migrationStatus.pending.length - 5} more
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+                {service.migrationStatus.error && (
+                  <div className="rounded border border-yellow-200 bg-yellow-50 px-2 py-1 text-[10px] text-yellow-800">
+                    {service.migrationStatus.error}
+                  </div>
+                )}
+                <RunMigrationsControl
+                  action={runMigrationsAction}
+                  initialState={runMigrationsInitialState}
+                />
+              </div>
+            )}
           </div>
         ))}
       </div>
