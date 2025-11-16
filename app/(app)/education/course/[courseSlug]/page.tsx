@@ -239,8 +239,8 @@ export default async function CourseDetailPage({
         )}
       </div>
 
-      <div className="grid grid-cols-[260px,minmax(0,1fr)] gap-4">
-        <aside className="rounded border bg-white p-3 text-xs shadow-sm">
+      <div className="flex gap-4">
+        <aside className="w-64 shrink-0 rounded border bg-white p-3 text-xs shadow-sm">
           <div className="mb-2 text-[11px] font-semibold uppercase text-gray-500">
             Lessons
           </div>
@@ -303,7 +303,7 @@ export default async function CourseDetailPage({
           )}
         </aside>
 
-        <section className="rounded border bg-white p-4 text-sm shadow-sm">
+        <section className="min-w-0 flex-1 rounded border bg-white p-4 text-sm shadow-sm">
           {activeLesson && (
             <>
               <div className="mb-3 flex items-center justify-between">
