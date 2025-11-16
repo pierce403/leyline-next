@@ -1,11 +1,16 @@
 import type { EducationStatus, MembershipLevel } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { EdpakImportForm } from "./EdpakImportForm";
 import { CourseEditLink } from "./CourseEditLink";
 import { CourseInfoLink } from "./CourseInfoLink";
+import { CourseModalsClient } from "./CourseModalsClient";
+import type {
+  CourseModuleWithLessons,
+  CourseOutlineModal,
+  SelectedCourseModalData,
+} from "./types";
 
 export const dynamic = "force-dynamic";
 
@@ -166,28 +171,6 @@ type AdminCourseWithRelations = Awaited<
   lessons: { id: string }[];
 };
 
-type CourseModuleWithLessons = {
-  id: string;
-  moduleId: string;
-  courseId: string;
-  sortOrder: number;
-  module: {
-    id: string;
-    name: string;
-    description: string | null;
-    lessons: {
-      id: string;
-      lessonId: string;
-      sortOrder: number;
-      lesson: {
-        id: string;
-        name: string;
-        description: string | null;
-      };
-    }[];
-  };
-};
-
 type AdminCoursesPageProps = {
   searchParams?: {
     courseId?: string;
@@ -235,21 +218,7 @@ export default async function AdminCoursesPage({
     courseCount: courses.length,
   });
 
-  let selectedCourse:
-    | ({
-        id: string;
-        name: string;
-        description: string | null;
-        status: EducationStatus;
-        requiredLevel: MembershipLevel;
-      } & {
-        importSummary?: {
-          message: string;
-          hasMissingComponents: boolean;
-        } | null;
-        modulesWithLessons: CourseModuleWithLessons[];
-      })
-    | null = null;
+  let selectedCourse: SelectedCourseModalData | null = null;
 
   if (selectedCourseId) {
     console.log("[AdminCoursesPage] courseId search param detected", {
@@ -415,17 +384,7 @@ export default async function AdminCoursesPage({
     }
   }
 
-type CourseOutlineModal = {
-  id: string;
-  name: string;
-  description: string | null;
-  coverImageUrl: string | null;
-  requiredLevel: MembershipLevel;
-  createdAt: Date;
-  modules: CourseModuleWithLessons[];
-};
-
-let infoCourse: CourseOutlineModal | null = null;
+  let infoCourse: CourseOutlineModal | null = null;
 
   if (infoCourseId) {
     try {
@@ -457,7 +416,7 @@ let infoCourse: CourseOutlineModal | null = null;
           description: courseRecord.description,
           coverImageUrl: courseRecord.coverImageUrl,
           requiredLevel: courseRecord.requiredLevel,
-          createdAt: courseRecord.createdAt,
+          createdAt: courseRecord.createdAt.toISOString(),
           modules: outline as CourseModuleWithLessons[],
         };
       }
@@ -595,341 +554,13 @@ let infoCourse: CourseOutlineModal | null = null;
         </section>
       </div>
 
-      {selectedCourse && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
-          <div className="relative max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded bg-white p-6 text-sm shadow-xl">
-            <div className="mb-4 flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-base font-semibold text-gray-900">
-                  {selectedCourse.name}
-                </h2>
-                <p className="text-xs text-gray-500">Edit course.</p>
-              </div>
-              <Link
-                href="/admin/education/courses"
-                className="text-xs font-semibold text-gray-500 hover:text-gray-800"
-              >
-                ✕ Close
-              </Link>
-            </div>
-
-            {selectedCourse.importSummary?.hasMissingComponents && (
-              <section className="mb-4 rounded border border-red-300 bg-red-50 p-3 text-xs text-red-800">
-                <h3 className="mb-1 text-xs font-semibold">
-                  Import Issues Detected
-                </h3>
-                <p>{selectedCourse.importSummary.message}</p>
-              </section>
-            )}
-
-            <div className="grid gap-6 md:grid-cols-[1.1fr,1.3fr]">
-              <section className="rounded border bg-gray-50 p-4">
-                <h3 className="mb-3 text-xs font-semibold text-gray-700">
-                  Course Details
-                </h3>
-                <form action={updateCourseAction} className="space-y-3">
-                  <input
-                    type="hidden"
-                    name="courseId"
-                    value={selectedCourse.id}
-                  />
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-gray-700">
-                      Course Name
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      defaultValue={selectedCourse.name}
-                      className="w-full rounded border px-2 py-1 text-sm text-gray-900"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-gray-700">
-                      Description
-                    </label>
-                    <textarea
-                      name="description"
-                      defaultValue={selectedCourse.description ?? ""}
-                      rows={4}
-                      className="w-full rounded border px-2 py-1 text-sm text-gray-900"
-                    />
-                  </div>
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <div>
-                      <label className="mb-1 block text-xs font-semibold text-gray-700">
-                        Status
-                      </label>
-                      <select
-                        name="status"
-                        defaultValue={selectedCourse.status}
-                        className="w-full rounded border px-2 py-1 text-sm text-gray-900"
-                      >
-                        <option value="DEVELOPMENT">DEVELOPMENT</option>
-                        <option value="FREE">FREE</option>
-                        <option value="BASIC">BASIC</option>
-                        <option value="PRO">PRO</option>
-                        <option value="DELETED">DELETED</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-xs font-semibold text-gray-700">
-                        Required Level
-                      </label>
-                      <select
-                        name="requiredLevel"
-                        defaultValue={selectedCourse.requiredLevel}
-                        className="w-full rounded border px-2 py-1 text-sm text-gray-900"
-                      >
-                        <option value="FREE">FREE</option>
-                        <option value="BASIC">BASIC</option>
-                        <option value="PRO">PRO</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="mt-3 flex items-center gap-2">
-                    <button
-                      type="submit"
-                      className="rounded bg-leyline-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-lime-600"
-                    >
-                      Save
-                    </button>
-                    <Link
-                      href="/admin/education/courses"
-                      className="text-xs font-semibold text-gray-600 hover:underline"
-                    >
-                      Cancel
-                    </Link>
-                  </div>
-                </form>
-              </section>
-
-              <section className="rounded border bg-gray-50 p-4">
-                <h3 className="mb-3 text-xs font-semibold text-gray-700">
-                  Modules and Lessons
-                </h3>
-                {selectedCourse.modulesWithLessons.length === 0 ? (
-                  <p className="text-xs text-gray-500">
-                    No modules have been created for this course yet.
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {selectedCourse.modulesWithLessons.map((cm, index) => (
-                      <article
-                        key={cm.id}
-                        className="rounded border border-gray-200 bg-white"
-                      >
-                        <header className="flex items-center gap-3 border-b bg-gray-50 px-3 py-2">
-                          <div className="flex h-7 w-7 items-center justify-center rounded bg-leyline-primary text-[11px] font-semibold text-white">
-                            {index + 1}
-                          </div>
-                          <form
-                            action={updateModuleAction}
-                            className="flex flex-1 flex-col gap-1 text-xs"
-                          >
-                            <input
-                              type="hidden"
-                              name="courseId"
-                              value={selectedCourse.id}
-                            />
-                            <input
-                              type="hidden"
-                              name="moduleId"
-                              value={cm.module.id}
-                            />
-                            <div className="flex flex-col gap-1 md:flex-row md:items-center md:gap-2">
-                              <input
-                                type="text"
-                                name="name"
-                                defaultValue={cm.module.name}
-                                className="w-full rounded border px-2 py-1 text-xs text-gray-900 md:max-w-xs"
-                              />
-                              <input
-                                type="text"
-                                name="description"
-                                defaultValue={cm.module.description ?? ""}
-                                placeholder="Module description"
-                                className="w-full rounded border px-2 py-1 text-xs text-gray-900"
-                              />
-                              <button
-                                type="submit"
-                                className="mt-1 rounded border border-gray-300 px-2 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-50 md:mt-0"
-                              >
-                                Save
-                              </button>
-                            </div>
-                          </form>
-                          <div className="text-[11px] text-gray-500">
-                            {cm.module.lessons.length} lesson
-                            {cm.module.lessons.length === 1 ? "" : "s"}
-                          </div>
-                        </header>
-                        {cm.module.lessons.length > 0 && (
-                          <ul className="divide-y border-t text-xs">
-                            {cm.module.lessons.map((ml, lessonIndex) => (
-                              <li
-                                key={ml.id}
-                                className="flex items-start gap-3 bg-white px-3 py-2"
-                              >
-                                <div className="mt-0.5 flex h-6 w-6 items-center justify-center rounded bg-sky-500 text-[11px] font-semibold text-white">
-                                  {lessonIndex + 1}
-                                </div>
-                                <form
-                                  action={updateLessonAction}
-                                  className="flex flex-1 flex-col gap-1"
-                                >
-                                  <input
-                                    type="hidden"
-                                    name="courseId"
-                                    value={selectedCourse.id}
-                                  />
-                                  <input
-                                    type="hidden"
-                                    name="lessonId"
-                                    value={ml.lesson.id}
-                                  />
-                                  <div className="flex flex-col gap-1 md:flex-row md:items-center md:gap-2">
-                                    <input
-                                      type="text"
-                                      name="name"
-                                      defaultValue={ml.lesson.name}
-                                      className="w-full rounded border px-2 py-1 text-xs text-gray-900 md:max-w-xs"
-                                    />
-                                    <input
-                                      type="text"
-                                      name="description"
-                                      defaultValue={
-                                        ml.lesson.description ?? ""
-                                      }
-                                      placeholder="Lesson description"
-                                      className="w-full rounded border px-2 py-1 text-xs text-gray-900"
-                                    />
-                                    <button
-                                      type="submit"
-                                      className="mt-1 rounded border border-gray-300 px-2 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-50 md:mt-0"
-                                    >
-                                      Save
-                                    </button>
-                                  </div>
-                                </form>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </article>
-                    ))}
-                  </div>
-                )}
-              </section>
-            </div>
-          </div>
-        </div>
-      )}
-      {infoCourse && (
-        <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/30">
-          <div className="relative max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded bg-white p-6 text-sm shadow-xl">
-            <div className="mb-4 flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-base font-semibold text-gray-900">
-                  {infoCourse.name}
-                </h2>
-                <p className="text-xs text-gray-500">Course summary</p>
-              </div>
-              <Link
-                href="/admin/education/courses"
-                className="text-xs font-semibold text-gray-500 hover:text-gray-800"
-              >
-                ✕ Close
-              </Link>
-            </div>
-            <div className="space-y-3 text-xs text-gray-700">
-              {infoCourse.coverImageUrl && (
-                <div className="overflow-hidden rounded border">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={infoCourse.coverImageUrl}
-                    alt={infoCourse.name}
-                    className="h-48 w-full object-cover"
-                  />
-                </div>
-              )}
-              {infoCourse.description && (
-                <p className="text-sm text-gray-600">
-                  {infoCourse.description}
-                </p>
-              )}
-              <div className="flex flex-wrap gap-4 text-[11px] font-semibold">
-                <span>
-                  Required level:{" "}
-                  <span className="uppercase text-gray-900">
-                    {infoCourse.requiredLevel.toLowerCase()}
-                  </span>
-                </span>
-                <span>
-                  Modules: {infoCourse.modules.length} • Lessons:{" "}
-                  {infoCourse.modules.reduce(
-                    (sum, cm) => sum + cm.module.lessons.length,
-                    0,
-                  )}
-                </span>
-                <span>
-                  Created: {infoCourse.createdAt.toLocaleString()}
-                </span>
-              </div>
-            </div>
-            <div className="mt-4 space-y-3">
-              <h3 className="text-xs font-semibold uppercase text-gray-500">
-                Course Outline
-              </h3>
-              {infoCourse.modules.length === 0 ? (
-                <p className="text-xs text-gray-500">
-                  No modules are associated with this course yet.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {infoCourse.modules.map((cm, idx) => (
-                    <div
-                      key={cm.id}
-                      className="rounded border border-gray-200 bg-gray-50 p-3"
-                    >
-                      <div className="flex items-center justify-between text-xs font-semibold text-gray-800">
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex h-6 w-6 items-center justify-center rounded bg-leyline-primary text-[11px] text-white">
-                            {idx + 1}
-                          </span>
-                          <span>{cm.module.name}</span>
-                        </div>
-                        <span className="text-[11px] text-gray-500">
-                          {cm.module.lessons.length} lesson
-                          {cm.module.lessons.length === 1 ? "" : "s"}
-                        </span>
-                      </div>
-                      {cm.module.description && (
-                        <p className="mt-1 text-[11px] text-gray-600">
-                          {cm.module.description}
-                        </p>
-                      )}
-                      {cm.module.lessons.length > 0 && (
-                        <ul className="mt-2 list-disc space-y-1 pl-6 text-[11px] text-gray-600">
-                          {cm.module.lessons.map((lesson, lessonIndex) => (
-                            <li key={lesson.id}>
-                              <span className="font-semibold text-gray-800">
-                                Lesson {lessonIndex + 1}:
-                              </span>{" "}
-                              {lesson.lesson.name}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <CourseModalsClient
+        selectedCourse={selectedCourse}
+        infoCourse={infoCourse}
+        updateCourseAction={updateCourseAction}
+        updateModuleAction={updateModuleAction}
+        updateLessonAction={updateLessonAction}
+      />
     </>
   );
 }
