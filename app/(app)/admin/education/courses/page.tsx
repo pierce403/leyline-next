@@ -1,4 +1,5 @@
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { EdpakImportForm } from "./EdpakImportForm";
 
@@ -16,6 +17,24 @@ async function deleteCourseAction(formData: FormData) {
 
   revalidatePath("/admin/education/courses");
   revalidatePath("/education");
+}
+
+async function createCourseAction() {
+  "use server";
+
+  const course = await prisma.educationCourse.create({
+    data: {
+      name: "New Course",
+      description: null,
+      status: "DEVELOPMENT",
+      coverImageUrl: null,
+      requiredLevel: "FREE",
+    },
+  });
+
+  revalidatePath("/admin/education/courses");
+  revalidatePath("/education");
+  redirect(`/admin/education/courses/${course.id}`);
 }
 
 export default async function AdminCoursesPage() {
@@ -37,9 +56,17 @@ export default async function AdminCoursesPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="heading-leyline text-center text-sm text-gray-700">
-        Courses
-      </h1>
+      <div className="flex items-center justify-between">
+        <h1 className="heading-leyline text-sm text-gray-700">Courses</h1>
+        <form action={createCourseAction}>
+          <button
+            type="submit"
+            className="rounded bg-leyline-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-lime-600"
+          >
+            New Course
+          </button>
+        </form>
+      </div>
       <section className="rounded border bg-white p-4 text-sm shadow-sm">
         <h2 className="mb-2 font-semibold text-gray-800">Import Edpak Course</h2>
         <p className="mb-3 text-xs text-gray-600">
