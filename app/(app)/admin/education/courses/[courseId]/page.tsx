@@ -10,6 +10,80 @@ type AdminCourseEditPageProps = {
   };
 };
 
+async function updateModuleAction(formData: FormData) {
+  "use server";
+
+  const moduleId = formData.get("moduleId");
+  const courseId = formData.get("courseId");
+
+  if (typeof moduleId !== "string" || moduleId.length === 0) {
+    throw new Error("Missing moduleId");
+  }
+
+  const name = (formData.get("name") ?? "").toString().trim();
+  const descriptionRaw = formData.get("description");
+
+  if (!name) {
+    throw new Error("Module name is required");
+  }
+
+  const description =
+    typeof descriptionRaw === "string" && descriptionRaw.trim().length > 0
+      ? descriptionRaw.trim()
+      : null;
+
+  await prisma.educationModule.update({
+    where: { id: moduleId },
+    data: {
+      name,
+      description,
+    },
+  });
+
+  if (typeof courseId === "string" && courseId.length > 0) {
+    revalidatePath(`/admin/education/courses/${courseId}`);
+  }
+  revalidatePath("/admin/education/courses");
+  revalidatePath("/education");
+}
+
+async function updateLessonAction(formData: FormData) {
+  "use server";
+
+  const lessonId = formData.get("lessonId");
+  const courseId = formData.get("courseId");
+
+  if (typeof lessonId !== "string" || lessonId.length === 0) {
+    throw new Error("Missing lessonId");
+  }
+
+  const name = (formData.get("name") ?? "").toString().trim();
+  const descriptionRaw = formData.get("description");
+
+  if (!name) {
+    throw new Error("Lesson name is required");
+  }
+
+  const description =
+    typeof descriptionRaw === "string" && descriptionRaw.trim().length > 0
+      ? descriptionRaw.trim()
+      : null;
+
+  await prisma.educationLesson.update({
+    where: { id: lessonId },
+    data: {
+      name,
+      description,
+    },
+  });
+
+  if (typeof courseId === "string" && courseId.length > 0) {
+    revalidatePath(`/admin/education/courses/${courseId}`);
+  }
+  revalidatePath("/admin/education/courses");
+  revalidatePath("/education");
+}
+
 async function updateCourseAction(formData: FormData) {
   "use server";
 
@@ -329,16 +403,38 @@ export default async function AdminCourseEditPage({
                   <div className="flex h-7 w-7 items-center justify-center rounded bg-leyline-primary text-[11px] font-semibold text-white">
                     {index + 1}
                   </div>
-                  <div className="flex-1">
-                    <div className="text-xs font-semibold text-gray-900">
-                      {cm.module.name}
+                  <form
+                    action={updateModuleAction}
+                    className="flex flex-1 flex-col gap-1 text-xs"
+                  >
+                    <input type="hidden" name="courseId" value={course.id} />
+                    <input
+                      type="hidden"
+                      name="moduleId"
+                      value={cm.module.id}
+                    />
+                    <div className="flex flex-col gap-1 md:flex-row md:items-center md:gap-2">
+                      <input
+                        type="text"
+                        name="name"
+                        defaultValue={cm.module.name}
+                        className="w-full rounded border px-2 py-1 text-xs text-gray-900 md:max-w-xs"
+                      />
+                      <input
+                        type="text"
+                        name="description"
+                        defaultValue={cm.module.description ?? ""}
+                        placeholder="Module description"
+                        className="w-full rounded border px-2 py-1 text-xs text-gray-900"
+                      />
+                      <button
+                        type="submit"
+                        className="mt-1 rounded border border-gray-300 px-2 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-50 md:mt-0"
+                      >
+                        Save
+                      </button>
                     </div>
-                    {cm.module.description && (
-                      <div className="text-[11px] text-gray-600">
-                        {cm.module.description}
-                      </div>
-                    )}
-                  </div>
+                  </form>
                   <div className="text-[11px] text-gray-500">
                     {cm.module.lessons.length} lesson
                     {cm.module.lessons.length === 1 ? "" : "s"}
@@ -354,16 +450,42 @@ export default async function AdminCourseEditPage({
                         <div className="mt-0.5 flex h-6 w-6 items-center justify-center rounded bg-sky-500 text-[11px] font-semibold text-white">
                           {lessonIndex + 1}
                         </div>
-                        <div className="flex-1">
-                          <div className="font-semibold text-gray-900">
-                            {ml.lesson.name}
+                        <form
+                          action={updateLessonAction}
+                          className="flex flex-1 flex-col gap-1"
+                        >
+                          <input
+                            type="hidden"
+                            name="courseId"
+                            value={course.id}
+                          />
+                          <input
+                            type="hidden"
+                            name="lessonId"
+                            value={ml.lesson.id}
+                          />
+                          <div className="flex flex-col gap-1 md:flex-row md:items-center md:gap-2">
+                            <input
+                              type="text"
+                              name="name"
+                              defaultValue={ml.lesson.name}
+                              className="w-full rounded border px-2 py-1 text-xs text-gray-900 md:max-w-xs"
+                            />
+                            <input
+                              type="text"
+                              name="description"
+                              defaultValue={ml.lesson.description ?? ""}
+                              placeholder="Lesson description"
+                              className="w-full rounded border px-2 py-1 text-xs text-gray-900"
+                            />
+                            <button
+                              type="submit"
+                              className="mt-1 rounded border border-gray-300 px-2 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-50 md:mt-0"
+                            >
+                              Save
+                            </button>
                           </div>
-                          {ml.lesson.description && (
-                            <div className="text-[11px] text-gray-600">
-                              {ml.lesson.description}
-                            </div>
-                          )}
-                        </div>
+                        </form>
                       </li>
                     ))}
                   </ul>
