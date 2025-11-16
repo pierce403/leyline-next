@@ -198,12 +198,57 @@ async function importEdpakCourseFromArrayBuffer(
             ? manifestLesson.description.trim()
             : null;
 
+        let mediaUrl: string | null = null;
+
+        if (
+          (contentType === "IMAGE" || contentType === "VIDEO") &&
+          manifestLesson.filePath &&
+          manifestLesson.filePath.length > 0
+        ) {
+          const mediaEntry = zip.file(manifestLesson.filePath);
+
+          if (mediaEntry) {
+            try {
+              const buffer = await mediaEntry.async("nodebuffer");
+              const { uploadCourseMedia } = await import("@/lib/blob");
+              const folder = contentType === "IMAGE" ? "course-images" : "course-videos";
+              const safeFileId =
+                manifestLesson.fileId && manifestLesson.fileId.length > 0
+                  ? manifestLesson.fileId
+                  : manifestLesson.filePath.replace(/[\\/]/g, "_");
+              const uploaded = await uploadCourseMedia(
+                buffer,
+                folder,
+                `${course.id}-${safeFileId}`,
+              );
+              mediaUrl = uploaded.url;
+            } catch (error) {
+              console.error(
+                "[EdpakImport] Failed to upload lesson media",
+                {
+                  courseId: course.id,
+                  moduleId: mod.id,
+                  lessonId: manifestLesson.id,
+                  filePath: manifestLesson.filePath,
+                  error,
+                },
+              );
+            }
+          } else {
+            console.warn("[EdpakImport] Lesson media filePath not found in zip", {
+              courseId: course.id,
+              moduleId: mod.id,
+              lessonId: manifestLesson.id,
+              filePath: manifestLesson.filePath,
+            });
+          }
+        }
+
         const lessonContent =
-          manifestLesson.content && manifestLesson.content.length > 0
+          mediaUrl ??
+          (manifestLesson.content && manifestLesson.content.length > 0
             ? manifestLesson.content
-            : manifestLesson.filePath && manifestLesson.filePath.length > 0
-              ? manifestLesson.filePath
-              : moduleHtml;
+            : moduleHtml);
 
         const lesson = await prisma.educationLesson.create({
           data: {

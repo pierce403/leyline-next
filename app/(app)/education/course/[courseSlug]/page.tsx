@@ -1,6 +1,7 @@
+import type { ReactElement } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import type { LessonProgressStatus } from "@prisma/client";
+import type { LessonContentType, LessonProgressStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateCurrentUser } from "@/lib/current-user";
 
@@ -238,7 +239,7 @@ export default async function CourseDetailPage({
         )}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[260px,1fr]">
+      <div className="grid grid-cols-[260px,minmax(0,1fr)] gap-4">
         <aside className="rounded border bg-white p-3 text-xs shadow-sm">
           <div className="mb-2 text-[11px] font-semibold uppercase text-gray-500">
             Lessons
@@ -338,10 +339,8 @@ export default async function CourseDetailPage({
                   {activeLesson.lesson.description}
                 </p>
               )}
-              <div className="rounded border bg-gray-50 p-4 text-sm text-gray-800">
-                {activeLesson.lesson.content
-                  ? activeLesson.lesson.content
-                  : "This lesson does not have any content yet."}
+              <div className="rounded border bg-gray-50 p-2 text-sm text-gray-800">
+                {renderLessonContent(activeLesson.lesson.contentType, activeLesson.lesson.content)}
               </div>
             </>
           )}
@@ -349,4 +348,40 @@ export default async function CourseDetailPage({
       </div>
     </div>
   );
+}
+
+function renderLessonContent(
+  contentType: LessonContentType,
+  content: string | null,
+): ReactElement {
+  if (!content || content.length === 0) {
+    return (
+      <p className="text-xs text-gray-500">
+        This lesson does not have any content yet.
+      </p>
+    );
+  }
+
+  if (contentType === "IMAGE") {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={content}
+        alt=""
+        className="mx-auto max-h-[560px] w-auto max-w-full rounded bg-white object-contain"
+      />
+    );
+  }
+
+  if (contentType === "VIDEO") {
+    return (
+      <video
+        src={content}
+        controls
+        className="mx-auto max-h-[560px] w-auto max-w-full rounded bg-black"
+      />
+    );
+  }
+
+  return <p className="whitespace-pre-wrap text-sm text-gray-800">{content}</p>;
 }
