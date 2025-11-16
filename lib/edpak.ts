@@ -129,11 +129,19 @@ async function importEdpakCourseFromArrayBuffer(
   for (let index = 0; index < sortedModules.length; index += 1) {
     const mod = sortedModules[index];
 
-    const contentEntry = zip.file(mod.content);
-    const moduleHtml =
-      contentEntry != null
-        ? await contentEntry.async("string")
-        : `Content file "${mod.content}" not found in edpak archive.`;
+    let moduleHtml = "";
+    if (mod.content && mod.content.length > 0) {
+      const contentEntry = zip.file(mod.content);
+      if (contentEntry) {
+        moduleHtml = await contentEntry.async("string");
+      } else {
+        console.warn("[EdpakImport] Module content file not found", {
+          moduleId: mod.id,
+          moduleTitle: mod.title,
+          contentPath: mod.content,
+        });
+      }
+    }
 
     const createdModule = await prisma.educationModule.create({
       data: {
@@ -193,7 +201,9 @@ async function importEdpakCourseFromArrayBuffer(
         const lessonContent =
           manifestLesson.content && manifestLesson.content.length > 0
             ? manifestLesson.content
-            : moduleHtml;
+            : manifestLesson.filePath && manifestLesson.filePath.length > 0
+              ? manifestLesson.filePath
+              : moduleHtml;
 
         const lesson = await prisma.educationLesson.create({
           data: {
