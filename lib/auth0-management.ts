@@ -115,3 +115,34 @@ export async function updateAuth0UserMembership(
     );
   }
 }
+
+export async function fetchAuth0UserById(
+  userId: string,
+): Promise<Auth0User | null> {
+  const token = await getManagementToken();
+  const { domain } = getManagementEnv();
+
+  const res = await fetch(
+    `https://${domain}/api/v2/users/${encodeURIComponent(userId)}`,
+    {
+      headers: {
+        authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    },
+  );
+
+  if (res.status === 404) {
+    return null;
+  }
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(
+      `Failed to fetch Auth0 user by id: ${res.status} ${res.statusText} – ${text}`,
+    );
+  }
+
+  const user = (await res.json()) as Auth0User;
+  return user;
+}

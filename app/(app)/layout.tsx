@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { MainNavbar } from "@/components/layout/main-navbar";
 import { getAuth0Session, isAuth0Configured } from "@/lib/auth0";
 import { getUserRolesFromSession, userHasAdminAccess } from "@/lib/authz";
+import { fetchAuth0UserById } from "@/lib/auth0-management";
 
 export default async function AppLayout({
   children,
@@ -33,6 +34,37 @@ export default async function AppLayout({
   const userRoles = session ? getUserRolesFromSession(session) : undefined;
   const showAdminLink = !!(session && userHasAdminAccess(session));
 
+  let membershipLabel = "Leyline Free";
+
+  const auth0UserId =
+    typeof (session?.user as { sub?: string } | undefined)?.sub === "string"
+      ? (session?.user as { sub?: string }).sub
+      : undefined;
+
+  if (auth0UserId) {
+    try {
+      const auth0User = await fetchAuth0UserById(auth0UserId);
+      const membership =
+        auth0User?.app_metadata?.membership &&
+        typeof auth0User.app_metadata.membership === "string"
+          ? auth0User.app_metadata.membership.toLowerCase()
+          : "free";
+
+      if (membership === "pro") {
+        membershipLabel = "Leyline Pro";
+      } else if (membership === "basic") {
+        membershipLabel = "Leyline Basic";
+      } else {
+        membershipLabel = "Leyline Free";
+      }
+    } catch (error) {
+      console.error(
+        "[AppLayout] Failed to fetch Auth0 membership from Management API",
+        error,
+      );
+    }
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-slate-100">
       <MainNavbar
@@ -40,7 +72,7 @@ export default async function AppLayout({
         userEmail={userEmail}
         userPictureUrl={userPictureUrl}
         userRoles={userRoles}
-        membershipLabel="Leyline Free"
+        membershipLabel={membershipLabel}
         showAdminLink={showAdminLink}
       />
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-6">
