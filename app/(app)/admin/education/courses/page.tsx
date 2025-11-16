@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { EdpakImportForm } from "./EdpakImportForm";
 import { CourseEditLink } from "./CourseEditLink";
+import { CourseInfoLink } from "./CourseInfoLink";
 
 export const dynamic = "force-dynamic";
 
@@ -190,6 +191,7 @@ type CourseModuleWithLessons = {
 type AdminCoursesPageProps = {
   searchParams?: {
     courseId?: string;
+    infoCourseId?: string;
   };
 };
 
@@ -220,9 +222,16 @@ export default async function AdminCoursesPage({
       ? searchParams.courseId
       : null;
 
+  const infoCourseId =
+    typeof searchParams?.infoCourseId === "string" &&
+    searchParams.infoCourseId.trim().length > 0
+      ? searchParams.infoCourseId
+      : null;
+
   console.log("[AdminCoursesPage] render start", {
     timestamp: new Date().toISOString(),
     selectedCourseId,
+    infoCourseId,
     courseCount: courses.length,
   });
 
@@ -406,6 +415,60 @@ export default async function AdminCoursesPage({
     }
   }
 
+type CourseOutlineModal = {
+  id: string;
+  name: string;
+  description: string | null;
+  coverImageUrl: string | null;
+  requiredLevel: MembershipLevel;
+  createdAt: Date;
+  modules: CourseModuleWithLessons[];
+};
+
+let infoCourse: CourseOutlineModal | null = null;
+
+  if (infoCourseId) {
+    try {
+      const courseRecord = await prisma.educationCourse.findUnique({
+        where: { id: infoCourseId },
+      });
+
+      if (courseRecord) {
+        const outline = await prisma.courseModule.findMany({
+          where: { courseId: courseRecord.id },
+          orderBy: { sortOrder: "asc" },
+          include: {
+            module: {
+              include: {
+                lessons: {
+                  orderBy: { sortOrder: "asc" },
+                  include: {
+                    lesson: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        infoCourse = {
+          id: courseRecord.id,
+          name: courseRecord.name,
+          description: courseRecord.description,
+          coverImageUrl: courseRecord.coverImageUrl,
+          requiredLevel: courseRecord.requiredLevel,
+          createdAt: courseRecord.createdAt,
+          modules: outline as CourseModuleWithLessons[],
+        };
+      }
+    } catch (error) {
+      console.error(
+        "AdminCoursesPage: failed to load course outline for info modal",
+        error,
+      );
+    }
+  }
+
   return (
     <>
       <div className="space-y-6">
@@ -486,7 +549,9 @@ export default async function AdminCoursesPage({
                       className="odd:bg-white even:bg-gray-50 align-top"
                     >
                       <td className="border-t px-3 py-2 align-middle">
-                        {course.name}
+                        <CourseInfoLink courseId={course.id}>
+                          {course.name}
+                        </CourseInfoLink>
                       </td>
                       <td className="border-t px-3 py-2 align-middle">
                         {course.status}
@@ -757,6 +822,110 @@ export default async function AdminCoursesPage({
                   </div>
                 )}
               </section>
+            </div>
+          </div>
+        </div>
+      )}
+      {infoCourse && (
+        <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/30">
+          <div className="relative max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded bg-white p-6 text-sm shadow-xl">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-base font-semibold text-gray-900">
+                  {infoCourse.name}
+                </h2>
+                <p className="text-xs text-gray-500">Course summary</p>
+              </div>
+              <Link
+                href="/admin/education/courses"
+                className="text-xs font-semibold text-gray-500 hover:text-gray-800"
+              >
+                ✕ Close
+              </Link>
+            </div>
+            <div className="space-y-3 text-xs text-gray-700">
+              {infoCourse.coverImageUrl && (
+                <div className="overflow-hidden rounded border">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={infoCourse.coverImageUrl}
+                    alt={infoCourse.name}
+                    className="h-48 w-full object-cover"
+                  />
+                </div>
+              )}
+              {infoCourse.description && (
+                <p className="text-sm text-gray-600">
+                  {infoCourse.description}
+                </p>
+              )}
+              <div className="flex flex-wrap gap-4 text-[11px] font-semibold">
+                <span>
+                  Required level:{" "}
+                  <span className="uppercase text-gray-900">
+                    {infoCourse.requiredLevel.toLowerCase()}
+                  </span>
+                </span>
+                <span>
+                  Modules: {infoCourse.modules.length} • Lessons:{" "}
+                  {infoCourse.modules.reduce(
+                    (sum, cm) => sum + cm.module.lessons.length,
+                    0,
+                  )}
+                </span>
+                <span>
+                  Created: {infoCourse.createdAt.toLocaleString()}
+                </span>
+              </div>
+            </div>
+            <div className="mt-4 space-y-3">
+              <h3 className="text-xs font-semibold uppercase text-gray-500">
+                Course Outline
+              </h3>
+              {infoCourse.modules.length === 0 ? (
+                <p className="text-xs text-gray-500">
+                  No modules are associated with this course yet.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {infoCourse.modules.map((cm, idx) => (
+                    <div
+                      key={cm.id}
+                      className="rounded border border-gray-200 bg-gray-50 p-3"
+                    >
+                      <div className="flex items-center justify-between text-xs font-semibold text-gray-800">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex h-6 w-6 items-center justify-center rounded bg-leyline-primary text-[11px] text-white">
+                            {idx + 1}
+                          </span>
+                          <span>{cm.module.name}</span>
+                        </div>
+                        <span className="text-[11px] text-gray-500">
+                          {cm.module.lessons.length} lesson
+                          {cm.module.lessons.length === 1 ? "" : "s"}
+                        </span>
+                      </div>
+                      {cm.module.description && (
+                        <p className="mt-1 text-[11px] text-gray-600">
+                          {cm.module.description}
+                        </p>
+                      )}
+                      {cm.module.lessons.length > 0 && (
+                        <ul className="mt-2 list-disc space-y-1 pl-6 text-[11px] text-gray-600">
+                          {cm.module.lessons.map((lesson, lessonIndex) => (
+                            <li key={lesson.id}>
+                              <span className="font-semibold text-gray-800">
+                                Lesson {lessonIndex + 1}:
+                              </span>{" "}
+                              {lesson.lesson.name}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
