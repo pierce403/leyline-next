@@ -53,6 +53,12 @@ async function runMigrationsAction(
 
   try {
     for (const attempt of attempts) {
+      console.log("[AdminDashboard] Running migration command", {
+        label: attempt.label,
+        command: attempt.cmd,
+        args: attempt.args,
+      });
+
       try {
         const { stdout, stderr } = await execFileAsync(attempt.cmd, attempt.args, {
           env: {
@@ -60,7 +66,16 @@ async function runMigrationsAction(
           },
         });
 
-        const output = [stdout, stderr].filter(Boolean).join("\n").trim();
+        const output = [stdout, stderr]
+          .filter(Boolean)
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .join("\n");
+
+        console.log("[AdminDashboard] Migration command succeeded", {
+          label: attempt.label,
+          output,
+        });
         revalidatePath("/admin");
         return {
           ok: true,
@@ -70,6 +85,11 @@ async function runMigrationsAction(
               : "Prisma migrations ran successfully. Check logs for more detail.",
         };
       } catch (commandError) {
+        console.error("[AdminDashboard] Migration command failed", {
+          label: attempt.label,
+          error: commandError,
+        });
+
         const messageParts: string[] = [];
         if (
           commandError &&
