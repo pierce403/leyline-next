@@ -14,6 +14,8 @@ const ADMIN_ROLES: string[] = rawAdminRoles
       .filter(Boolean)
   : ["admin"];
 
+const HARD_CODED_ADMIN_EMAILS = ["dagan@leyline.io", "seth@leyline.io"];
+
 function readRolesFromSession(session: SessionData): string[] {
   const claimValue = (session.user as Record<string, unknown>)[
     DEFAULT_ROLES_CLAIM
@@ -66,17 +68,48 @@ function readRolesFromSession(session: SessionData): string[] {
 
 export function getUserRolesFromSession(session: SessionData): string[] {
   const roles = readRolesFromSession(session);
+  const email =
+    typeof (session.user as { email?: string } | undefined)?.email === "string"
+      ? (session.user as { email?: string }).email
+      : undefined;
+
+  if (
+    email &&
+    HARD_CODED_ADMIN_EMAILS.some(
+      (value) => value.toLowerCase() === email.toLowerCase(),
+    ) &&
+    !roles.map((role) => role.toLowerCase()).includes("admin")
+  ) {
+    return [...roles, "admin"];
+  }
+
   return roles;
 }
 
 export function userHasAdminAccess(session: SessionData): boolean {
   const roles = readRolesFromSession(session);
-  if (roles.length === 0) {
-    return false;
-  }
+  const email =
+    typeof (session.user as { email?: string } | undefined)?.email === "string"
+      ? (session.user as { email?: string }).email
+      : undefined;
 
   const adminLower = ADMIN_ROLES.map((role) => role.toLowerCase());
-  return roles
+  const hasRoleAdmin = roles
     .map((role) => role.toLowerCase())
     .some((role) => adminLower.includes(role));
+
+  if (hasRoleAdmin) {
+    return true;
+  }
+
+  if (
+    email &&
+    HARD_CODED_ADMIN_EMAILS.some(
+      (value) => value.toLowerCase() === email.toLowerCase(),
+    )
+  ) {
+    return true;
+  }
+
+  return false;
 }
