@@ -1,8 +1,47 @@
 import { NextRequest, NextResponse } from "next/server";
 import JSZip from "jszip";
-import { importEdpakCourse } from "@/lib/edpak";
+import { importEdpakCourse, importEdpakCourseFromBlobUrl } from "@/lib/edpak";
 
 export async function POST(req: NextRequest) {
+  const contentType = req.headers.get("content-type") ?? "";
+
+  // Preferred path: import from a Blob URL, so large files never hit the
+  // function body size limit.
+  if (contentType.includes("application/json")) {
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON payload" },
+        { status: 400 },
+      );
+    }
+
+    const blobUrl =
+      body && typeof (body as { blobUrl?: unknown }).blobUrl === "string"
+        ? (body as { blobUrl: string }).blobUrl
+        : null;
+
+    if (!blobUrl) {
+      return NextResponse.json(
+        { error: "Missing blobUrl in request body" },
+        { status: 400 },
+      );
+    }
+
+    try {
+      await importEdpakCourseFromBlobUrl(blobUrl);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unknown import error";
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
+
+    return NextResponse.redirect(new URL("/admin/education/courses", req.url));
+  }
+
+  // Fallback for small local tests: accept a direct file upload.
   const formData = await req.formData();
   const file = formData.get("edpak");
 
@@ -16,7 +55,6 @@ export async function POST(req: NextRequest) {
   const fileName = file.name ?? "";
   const lowerName = fileName.toLowerCase();
 
-  // Allow both `.edpak` and plain `.zip` uploads for now.
   if (!lowerName.endsWith(".edpak") && !lowerName.endsWith(".zip")) {
     return NextResponse.json(
       {
@@ -36,7 +74,6 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Quick sanity check that this is a ZIP file before handing off.
     await JSZip.loadAsync(arrayBuffer);
   } catch {
     return NextResponse.json(

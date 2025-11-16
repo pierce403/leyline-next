@@ -2,6 +2,7 @@
 
 import type { ChangeEvent, MouseEvent } from "react";
 import { useRef, useState } from "react";
+import { upload } from "@vercel/blob/client";
 
 type Status = "idle" | "selecting" | "uploading";
 
@@ -37,16 +38,25 @@ export function EdpakImportForm() {
     setStatus("uploading");
 
     try {
-      const formData = new FormData();
-      formData.append("edpak", file);
+      const blob = await upload(file.name, file, {
+        access: "public",
+        handleUploadUrl: "/api/edpak/upload",
+        multipart: true,
+        clientPayload: JSON.stringify({ kind: "edpak-course" }),
+      });
+
+      console.log("[EdpakImport] Blob uploaded", blob.url);
 
       const response = await fetch("/api/edpak/import", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ blobUrl: blob.url }),
       });
 
       console.log(
-        "[EdpakImport] Upload response",
+        "[EdpakImport] Import response",
         response.status,
         response.statusText,
       );
@@ -67,7 +77,6 @@ export function EdpakImportForm() {
       console.error("[EdpakImport] Unexpected error during upload", error);
     } finally {
       setStatus("idle");
-      // Clear the file input so the same file can be selected again if needed.
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }

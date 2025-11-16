@@ -40,8 +40,9 @@ type EdpakManifest = {
   [key: string]: any;
 };
 
-export async function importEdpakCourse(file: File): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer();
+async function importEdpakCourseFromArrayBuffer(
+  arrayBuffer: ArrayBuffer,
+): Promise<string> {
   const buffer = Buffer.from(arrayBuffer);
 
   const zip = await JSZip.loadAsync(buffer);
@@ -203,4 +204,27 @@ export async function importEdpakCourse(file: File): Promise<string> {
   }
 
   return course.id;
+}
+
+export async function importEdpakCourse(file: File): Promise<string> {
+  const arrayBuffer = await file.arrayBuffer();
+  return importEdpakCourseFromArrayBuffer(arrayBuffer);
+}
+
+export async function importEdpakCourseFromBlobUrl(
+  blobUrl: string,
+): Promise<string> {
+  const response = await fetch(blobUrl);
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch edpak from blob URL: ${response.status} ${response.statusText}`,
+    );
+  }
+
+  const arrayBuffer = await response.arrayBuffer();
+  if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+    throw new Error("Downloaded edpak from blob URL is empty");
+  }
+
+  return importEdpakCourseFromArrayBuffer(arrayBuffer);
 }
