@@ -388,10 +388,13 @@ export async function importEdpakCourseFromBlobUrl(
   }
   if (
     parsed.protocol !== "https:" ||
-    parsed.hostname !== ALLOWED_BLOB_HOST
+    parsed.hostname !== ALLOWED_BLOB_HOST ||
+    parsed.port !== "" ||
+    parsed.username !== "" ||
+    parsed.password !== ""
   ) {
     throw new Error(
-      `blobUrl must refer to the trusted host (${ALLOWED_BLOB_HOST}), got ${parsed.hostname}`,
+      `blobUrl must refer to the trusted host (${ALLOWED_BLOB_HOST}), got ${parsed.hostname} (invalid protocol/host/port/credentials)`,
     );
   }
 
