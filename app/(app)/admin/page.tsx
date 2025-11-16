@@ -9,6 +9,7 @@ import {
   runMigrationsInitialState,
   type MigrationActionState,
 } from "@/components/admin/run-migrations-control";
+import { FrontendTestModal } from "@/components/admin/frontend-test-modal";
 
 const execFileAsync = promisify(execFile);
 
@@ -210,6 +211,11 @@ export default async function AdminDashboardPage() {
                   action={runMigrationsAction}
                   initialState={runMigrationsInitialState}
                 />
+              </div>
+            )}
+            {service.name === "Frontend" && (
+              <div className="mt-3 border-t pt-3">
+                <FrontendTestModal />
               </div>
             )}
           </div>

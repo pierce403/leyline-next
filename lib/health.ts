@@ -21,6 +21,15 @@ export type ServiceHealth = {
   migrationStatus?: MigrationStatus;
 };
 
+type FrontendVersionInfo = {
+  node: string;
+  next?: string;
+  react?: string;
+  error?: string;
+};
+
+let cachedFrontendInfo: FrontendVersionInfo | null = null;
+
 async function getLocalMigrationNames(): Promise<string[]> {
   const migrationsDir = path.join(process.cwd(), "prisma", "migrations");
   try {
@@ -79,6 +88,50 @@ async function getPrismaMigrationStatus(): Promise<MigrationStatus> {
       error: message,
     };
   }
+}
+
+async function getFrontendVersionInfo(): Promise<FrontendVersionInfo> {
+  if (cachedFrontendInfo) {
+    return cachedFrontendInfo;
+  }
+
+  const node = process.version;
+  let nextVersion: string | undefined;
+  let reactVersion: string | undefined;
+  let error: string | undefined;
+
+  try {
+    const nextPkg = (await import("next/package.json")).default as {
+      version?: string;
+    };
+    nextVersion = nextPkg.version;
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Failed to read next/package.json";
+    console.error("[Health] Failed to read Next.js version", err);
+    error = message;
+  }
+
+  try {
+    const reactPkg = (await import("react/package.json")).default as {
+      version?: string;
+    };
+    reactVersion = reactPkg.version;
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Failed to read react/package.json";
+    console.error("[Health] Failed to read React version", err);
+    error = error ?? message;
+  }
+
+  cachedFrontendInfo = {
+    node,
+    next: nextVersion,
+    react: reactVersion,
+    error,
+  };
+
+  return cachedFrontendInfo;
 }
 
 export async function getSystemHealth(): Promise<ServiceHealth[]> {
@@ -140,6 +193,18 @@ export async function getSystemHealth(): Promise<ServiceHealth[]> {
       details: "BLOB_READ_WRITE_TOKEN is not configured",
     });
   }
+
+  // Frontend / SSR environment
+  const frontend = await getFrontendVersionInfo();
+  const frontendDetails = frontend.error
+    ? `Node ${frontend.node} • Next.js ${frontend.next ?? "unknown"} • React ${frontend.react ?? "unknown"} • SSR/RSC: App Router (status unknown: ${frontend.error})`
+    : `Node ${frontend.node} • Next.js ${frontend.next ?? "unknown"} • React ${frontend.react ?? "unknown"} • SSR/RSC: App Router enabled`;
+
+  results.push({
+    name: "Frontend",
+    status: frontend.error ? "warning" : "ok",
+    details: frontendDetails,
+  });
 
   return results;
 }
