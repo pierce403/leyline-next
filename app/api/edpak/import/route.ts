@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
     try {
       body = await req.json();
     } catch {
+      console.error("[EdpakImport] Failed to parse JSON body in /api/edpak/import");
       return NextResponse.json(
         { error: "Invalid JSON payload" },
         { status: 400 },
@@ -24,6 +25,7 @@ export async function POST(req: NextRequest) {
         : null;
 
     if (!blobUrl) {
+      console.error("[EdpakImport] Missing blobUrl in JSON body", body);
       return NextResponse.json(
         { error: "Missing blobUrl in request body" },
         { status: 400 },
@@ -31,7 +33,9 @@ export async function POST(req: NextRequest) {
     }
 
     try {
+      console.log("[EdpakImport] Starting import from blobUrl", { blobUrl });
       await importEdpakCourseFromBlobUrl(blobUrl);
+      console.log("[EdpakImport] Completed import from blobUrl", { blobUrl });
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Unknown import error";

@@ -15,6 +15,11 @@ type ManifestLesson = {
   moduleId?: string;
   title?: string;
   type?: string;
+  order?: number;
+  description?: string;
+  content?: string;
+  fileId?: string;
+  filePath?: string;
 };
 
 type ManifestFile = {
@@ -68,6 +73,15 @@ async function importEdpakCourseFromArrayBuffer(
     throw new Error("manifest.json is not valid JSON");
   }
 
+  console.log("[EdpakImport] Parsed manifest", {
+    title: manifest.title,
+    version: manifest.version,
+    author: manifest.author,
+    modules: Array.isArray(manifest.modules) ? manifest.modules.length : 0,
+    lessons: Array.isArray(manifest.lessons) ? manifest.lessons.length : 0,
+    files: Array.isArray(manifest.files) ? manifest.files.length : 0,
+  });
+
   if (!manifest.title || !manifest.version || !manifest.author) {
     throw new Error(
       "manifest.json is missing required fields (title, version, author)",
@@ -99,11 +113,23 @@ async function importEdpakCourseFromArrayBuffer(
     return ao - bo;
   });
 
+  const lessonsByModuleId = new Map<string, ManifestLesson[]>();
+  if (Array.isArray(manifest.lessons)) {
+    for (const lesson of manifest.lessons) {
+      if (!lesson.moduleId) continue;
+      const existing = lessonsByModuleId.get(lesson.moduleId) ?? [];
+      existing.push(lesson);
+      lessonsByModuleId.set(lesson.moduleId, existing);
+    }
+  }
+
+  let totalLessonsCreated = 0;
+
   for (let index = 0; index < sortedModules.length; index += 1) {
     const mod = sortedModules[index];
 
     const contentEntry = zip.file(mod.content);
-    const content =
+    const moduleHtml =
       contentEntry != null
         ? await contentEntry.async("string")
         : `Content file "${mod.content}" not found in edpak archive.`;
@@ -125,26 +151,96 @@ async function importEdpakCourseFromArrayBuffer(
       },
     });
 
-    const lesson = await prisma.educationLesson.create({
-      data: {
-        name: mod.title,
-        description: null,
-        status: "ACTIVE",
-        contentType: "HTML",
-        content,
-        course: {
-          connect: { id: course.id },
-        },
-      },
-    });
+    const manifestLessonsForModule = lessonsByModuleId.get(mod.id) ?? [];
 
-    await prisma.moduleLesson.create({
-      data: {
-        moduleId: createdModule.id,
-        lessonId: lesson.id,
-        sortOrder: 0,
-      },
-    });
+    if (manifestLessonsForModule.length > 0) {
+      const sortedLessons = [...manifestLessonsForModule].sort((a, b) => {
+        const ao = a.order ?? 0;
+        const bo = b.order ?? 0;
+        return ao - bo;
+      });
+
+      for (let lessonIndex = 0; lessonIndex < sortedLessons.length; lessonIndex += 1) {
+        const manifestLesson = sortedLessons[lessonIndex];
+
+        const type = (manifestLesson.type ?? "").toLowerCase();
+        let contentType: "HTML" | "TEXT" | "MULTIPLE_CHOICE" | "IMAGE" | "VIDEO" | "NONE" =
+          "HTML";
+
+        if (type === "text") {
+          contentType = "TEXT";
+        } else if (type === "multiplechoice" || type === "multiple_choice") {
+          contentType = "MULTIPLE_CHOICE";
+        } else if (type === "image") {
+          contentType = "IMAGE";
+        } else if (type === "video") {
+          contentType = "VIDEO";
+        } else if (!type) {
+          contentType = "NONE";
+        }
+
+        const lessonName =
+          manifestLesson.title && manifestLesson.title.trim().length > 0
+            ? manifestLesson.title.trim()
+            : `${mod.title} ${lessonIndex + 1}`;
+
+        const lessonDescription =
+          manifestLesson.description && manifestLesson.description.trim().length > 0
+            ? manifestLesson.description.trim()
+            : null;
+
+        const lessonContent =
+          manifestLesson.content && manifestLesson.content.length > 0
+            ? manifestLesson.content
+            : moduleHtml;
+
+        const lesson = await prisma.educationLesson.create({
+          data: {
+            name: lessonName,
+            description: lessonDescription,
+            status: "ACTIVE",
+            contentType,
+            content: lessonContent,
+            course: {
+              connect: { id: course.id },
+            },
+          },
+        });
+
+        await prisma.moduleLesson.create({
+          data: {
+            moduleId: createdModule.id,
+            lessonId: lesson.id,
+            sortOrder: lessonIndex,
+          },
+        });
+
+        totalLessonsCreated += 1;
+      }
+    } else {
+      const lesson = await prisma.educationLesson.create({
+        data: {
+          name: mod.title,
+          description: null,
+          status: "ACTIVE",
+          contentType: "HTML",
+          content: moduleHtml,
+          course: {
+            connect: { id: course.id },
+          },
+        },
+      });
+
+      await prisma.moduleLesson.create({
+        data: {
+          moduleId: createdModule.id,
+          lessonId: lesson.id,
+          sortOrder: 0,
+        },
+      });
+
+      totalLessonsCreated += 1;
+    }
   }
 
   const lessonCount = Array.isArray(manifest.lessons)
@@ -248,6 +344,12 @@ async function importEdpakCourseFromArrayBuffer(
     coverImageImported,
     coverImageUrl,
   };
+
+  console.log("[EdpakImport] Created course records", {
+    courseId: course.id,
+    modulesCreated: sortedModules.length,
+    lessonsCreated: totalLessonsCreated,
+  });
 
   try {
     await prisma.educationImportLog.create({
