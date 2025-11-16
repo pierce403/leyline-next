@@ -377,16 +377,44 @@ export async function importEdpakCourse(file: File): Promise<string> {
 export async function importEdpakCourseFromBlobUrl(
   blobUrl: string,
 ): Promise<string> {
-  const response = await fetch(blobUrl);
-  if (!response.ok) {
+  const maxAttempts = 3;
+  const delayMs = 500;
+
+  let arrayBuffer: ArrayBuffer | null = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const response = await fetch(blobUrl);
+
+    if (response.ok) {
+      arrayBuffer = await response.arrayBuffer();
+      break;
+    }
+
+    if (response.status === 404 && attempt < maxAttempts) {
+      console.warn(
+        "[EdpakImport] Blob 404 when fetching edpak, retrying",
+        {
+          blobUrl,
+          attempt,
+          maxAttempts,
+        },
+      );
+      // Simple fixed backoff between attempts.
+      await new Promise((resolve) => {
+        setTimeout(resolve, delayMs);
+      });
+      continue;
+    }
+
     throw new Error(
       `Failed to fetch edpak from blob URL: ${response.status} ${response.statusText}`,
     );
   }
 
-  const arrayBuffer = await response.arrayBuffer();
   if (!arrayBuffer || arrayBuffer.byteLength === 0) {
-    throw new Error("Downloaded edpak from blob URL is empty");
+    throw new Error(
+      "Downloaded edpak from blob URL is empty or still not available after retries",
+    );
   }
 
   const courseId = await importEdpakCourseFromArrayBuffer(arrayBuffer);
