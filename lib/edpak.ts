@@ -380,6 +380,7 @@ export async function importEdpakCourseFromBlobUrl(
   // SSRF mitigation: only allow blob URLs to the trusted Vercel blob storage host.
   // Adjust as needed for your storage solution.
   const ALLOWED_BLOB_HOST = "blob.vercel-storage.com";
+  const ALLOWED_BLOB_SUFFIX = ".blob.vercel-storage.com";
   let parsed;
   try {
     parsed = new URL(blobUrl);
@@ -387,9 +388,14 @@ export async function importEdpakCourseFromBlobUrl(
     throw new Error(`Invalid blobUrl (not a valid URL): ${blobUrl}`);
   }
   // Strictly compare hostname and protocol
+  const normalizedHost = parsed.hostname.toLowerCase();
+  const hostAllowed =
+    normalizedHost === ALLOWED_BLOB_HOST ||
+    normalizedHost.endsWith(ALLOWED_BLOB_SUFFIX);
+
   if (
     parsed.protocol !== "https:" ||
-    parsed.hostname.toLowerCase() !== ALLOWED_BLOB_HOST.toLowerCase() ||
+    !hostAllowed ||
     parsed.port !== "" ||
     parsed.username !== "" ||
     parsed.password !== "" ||
@@ -397,7 +403,7 @@ export async function importEdpakCourseFromBlobUrl(
     parsed.hash !== ""
   ) {
     throw new Error(
-      `blobUrl must refer to the trusted host (${ALLOWED_BLOB_HOST}), got ${parsed.hostname} (invalid protocol/host/port/credentials)`,
+      `blobUrl must refer to the trusted host (${ALLOWED_BLOB_HOST} or *.blob.vercel-storage.com), got ${parsed.hostname} (invalid protocol/host/port/credentials)`,
     );
   }
 
