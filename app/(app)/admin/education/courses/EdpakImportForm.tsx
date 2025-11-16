@@ -77,8 +77,8 @@ export function EdpakImportForm() {
         response.statusText,
       );
 
-      if (response.redirected) {
-        window.location.href = response.url;
+      if (response.ok) {
+        window.location.href = "/admin/education/courses";
         return;
       }
 
@@ -86,8 +86,14 @@ export function EdpakImportForm() {
       if (contentType.includes("application/json")) {
         const data = await response.json();
         console.error("[EdpakImport] Import failed", data);
+        if (typeof window !== "undefined" && data?.error) {
+          window.alert(`Import failed: ${data.error}`);
+        }
       } else {
         console.error("[EdpakImport] Import failed with non-JSON response");
+        if (typeof window !== "undefined") {
+          window.alert("Import failed with a non-JSON response from the server.");
+        }
       }
     } catch (error) {
       let message = "Unexpected error while uploading course package.";

@@ -389,5 +389,23 @@ export async function importEdpakCourseFromBlobUrl(
     throw new Error("Downloaded edpak from blob URL is empty");
   }
 
-  return importEdpakCourseFromArrayBuffer(arrayBuffer);
+  const courseId = await importEdpakCourseFromArrayBuffer(arrayBuffer);
+
+  try {
+    const { del } = await import("@vercel/blob");
+    await del(blobUrl);
+    console.log("[EdpakImport] Deleted source edpak blob after import", {
+      blobUrl,
+    });
+  } catch (error) {
+    console.error(
+      "[EdpakImport] Failed to delete source edpak blob after import",
+      {
+        blobUrl,
+        error,
+      },
+    );
+  }
+
+  return courseId;
 }
