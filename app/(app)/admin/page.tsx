@@ -1,6 +1,7 @@
 import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { getSystemHealth } from "@/lib/health";
 import {
@@ -21,39 +22,94 @@ async function runMigrationsAction(
   void _formData;
 
   const isWindows = process.platform === "win32";
+  const schemaPath = path.join(process.cwd(), "prisma", "schema.prisma");
   const prismaBinary = path.join(
     process.cwd(),
     "node_modules",
     ".bin",
     `prisma${isWindows ? ".cmd" : ""}`,
   );
+  const prismaVersion =
+    Prisma?.prismaVersion?.client ??
+    process.env.PRISMA_VERSION ??
+    process.env.npm_package_dependencies_prisma ??
+    "6.19.0";
+
+  const baseArgs = ["migrate", "deploy", "--schema", schemaPath];
+  const attempts = [
+    {
+      label: "local prisma CLI",
+      cmd: prismaBinary,
+      args: baseArgs,
+    },
+    {
+      label: `npx prisma@${prismaVersion}`,
+      cmd: "npx",
+      args: ["--yes", `prisma@${prismaVersion}`, ...baseArgs],
+    },
+  ];
+
+  const errorMessages: string[] = [];
 
   try {
-    const { stdout, stderr } = await execFileAsync(prismaBinary, [
-      "migrate",
-      "deploy",
-      "--schema",
-      path.join(process.cwd(), "prisma", "schema.prisma"),
-    ]);
+    for (const attempt of attempts) {
+      try {
+        const { stdout, stderr } = await execFileAsync(attempt.cmd, attempt.args, {
+          env: {
+            ...process.env,
+          },
+        });
 
-    const output = [stdout, stderr].filter(Boolean).join("\n").trim();
-    revalidatePath("/admin");
-    return {
-      ok: true,
-      message:
-        output.length > 0
-          ? output
-          : "Prisma migrations ran successfully. Check logs for more detail.",
-    };
+        const output = [stdout, stderr].filter(Boolean).join("\n").trim();
+        revalidatePath("/admin");
+        return {
+          ok: true,
+          message:
+            output.length > 0
+              ? output
+              : "Prisma migrations ran successfully. Check logs for more detail.",
+        };
+      } catch (commandError) {
+        const messageParts: string[] = [];
+        if (
+          commandError &&
+          typeof commandError === "object" &&
+          "stderr" in commandError &&
+          typeof commandError.stderr === "string" &&
+          commandError.stderr.trim().length > 0
+        ) {
+          messageParts.push(commandError.stderr.trim());
+        }
+        if (
+          commandError &&
+          typeof commandError === "object" &&
+          "stdout" in commandError &&
+          typeof commandError.stdout === "string" &&
+          commandError.stdout.trim().length > 0
+        ) {
+          messageParts.push(commandError.stdout.trim());
+        }
+        if (commandError instanceof Error) {
+          messageParts.push(commandError.message);
+        }
+        errorMessages.push(
+          `[${attempt.label}] ${messageParts.join("\n") || "Command failed"}`,
+        );
+      }
+    }
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to run migrations";
-    console.error("[AdminDashboard] Failed to run prisma migrate deploy", error);
-    return {
-      ok: false,
-      message,
-    };
+    console.error("[AdminDashboard] Unexpected error running migrations", error);
+    errorMessages.push(
+      error instanceof Error ? error.message : "Unexpected failure",
+    );
   }
+
+  return {
+    ok: false,
+    message:
+      errorMessages.join("\n\n") ||
+      "Failed to execute Prisma migrations. Check server logs for details.",
+  };
 }
 
 export default async function AdminDashboardPage() {
