@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import type { LessonContentType, LessonProgressStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateCurrentUser } from "@/lib/current-user";
+import { QuizLesson } from "../QuizLesson";
 
 type CoursePageRouteParams = {
   courseSlug: string;
@@ -381,6 +382,10 @@ function renderLessonContent(
         className="mx-auto max-h-[560px] w-auto max-w-full rounded bg-black"
       />
     );
+  }
+
+  if (contentType === "MULTIPLE_CHOICE") {
+    return <QuizLesson content={content} />;
   }
 
   return <p className="whitespace-pre-wrap text-sm text-gray-800">{content}</p>;
