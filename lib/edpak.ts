@@ -470,7 +470,7 @@ export async function importEdpakCourseFromBlobUrl(
     );
   }
 
-  const maxAttempts = 8;
+  const maxAttempts = 15;
   const delayMs = 1000;
 
   let arrayBuffer: ArrayBuffer | null = null;
