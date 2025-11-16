@@ -220,6 +220,12 @@ export default async function AdminCoursesPage({
       ? searchParams.courseId
       : null;
 
+  console.log("[AdminCoursesPage] render start", {
+    timestamp: new Date().toISOString(),
+    selectedCourseId,
+    courseCount: courses.length,
+  });
+
   let selectedCourse:
     | ({
         id: string;
