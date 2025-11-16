@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { EdpakImportForm } from "./EdpakImportForm";
+import { CourseEditLink } from "./CourseEditLink";
 
 export const dynamic = "force-dynamic";
 
@@ -236,12 +237,21 @@ export default async function AdminCoursesPage({
     | null = null;
 
   if (selectedCourseId) {
+    console.log("[AdminCoursesPage] courseId search param detected", {
+      selectedCourseId,
+    });
+
     try {
       const course = await prisma.educationCourse.findUnique({
         where: { id: selectedCourseId },
       });
 
       if (course) {
+        console.log("[AdminCoursesPage] Loaded course for modal edit", {
+          courseId: course.id,
+          name: course.name,
+        });
+
         const modulesWithLessons =
           (await prisma.courseModule.findMany({
             where: { courseId: course.id },
@@ -374,6 +384,13 @@ export default async function AdminCoursesPage({
           modulesWithLessons,
           importSummary,
         };
+      } else {
+        console.warn(
+          "[AdminCoursesPage] No course found for courseId search param",
+          {
+            selectedCourseId,
+          },
+        );
       }
     } catch (error) {
       console.error(
@@ -482,12 +499,7 @@ export default async function AdminCoursesPage({
                       </td>
                       <td className="border-t px-3 py-2 align-middle">
                         <div className="flex flex-wrap items-center gap-2 text-[11px]">
-                          <Link
-                            href={`/admin/education/courses?courseId=${course.id}`}
-                            className="rounded border border-gray-300 px-2 py-0.5 font-semibold text-gray-700 hover:bg-gray-50"
-                          >
-                            Edit
-                          </Link>
+                          <CourseEditLink courseId={course.id} />
                           <form action={deleteCourseAction}>
                             <input
                               type="hidden"
