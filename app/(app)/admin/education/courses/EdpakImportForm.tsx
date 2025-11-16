@@ -38,6 +38,22 @@ export function EdpakImportForm() {
     setStatus("uploading");
 
     try {
+      // Ensure any existing blob with this pathname is removed before upload.
+      try {
+        await fetch("/api/edpak/delete", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ pathname: file.name }),
+        });
+      } catch (deleteError) {
+        console.warn(
+          "[EdpakImport] Failed to delete existing blob before upload",
+          deleteError,
+        );
+      }
+
       const blob = await upload(file.name, file, {
         access: "public",
         handleUploadUrl: "/api/edpak/upload",
@@ -78,7 +94,7 @@ export function EdpakImportForm() {
       if (error instanceof Error) {
         if (error.message.includes("blob already exists")) {
           message =
-            "A file with this name has already been uploaded. Please try again with a different filename or contact support if this persists.";
+            "A file with this name has already been uploaded. The existing upload will be used; if you need to replace it, please contact support.";
         } else {
           message = error.message;
         }
