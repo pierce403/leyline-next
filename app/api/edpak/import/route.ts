@@ -34,15 +34,17 @@ export async function POST(req: NextRequest) {
 
     try {
       console.log("[EdpakImport] Starting import from blobUrl", { blobUrl });
-      await importEdpakCourseFromBlobUrl(blobUrl);
-      console.log("[EdpakImport] Completed import from blobUrl", { blobUrl });
+      const courseId = await importEdpakCourseFromBlobUrl(blobUrl);
+      console.log("[EdpakImport] Completed import from blobUrl", {
+        blobUrl,
+        courseId,
+      });
+      return NextResponse.json({ ok: true, courseId });
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Unknown import error";
       return NextResponse.json({ error: message }, { status: 400 });
     }
-
-    return NextResponse.redirect(new URL("/admin/education/courses", req.url));
   }
 
   // Fallback for small local tests: accept a direct file upload.

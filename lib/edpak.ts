@@ -407,8 +407,8 @@ export async function importEdpakCourseFromBlobUrl(
     );
   }
 
-  const maxAttempts = 3;
-  const delayMs = 500;
+  const maxAttempts = 8;
+  const delayMs = 1000;
 
   let arrayBuffer: ArrayBuffer | null = null;
 
@@ -420,16 +420,17 @@ export async function importEdpakCourseFromBlobUrl(
       break;
     }
 
-    if (response.status === 404 && attempt < maxAttempts) {
-      console.warn(
-        "[EdpakImport] Blob 404 when fetching edpak, retrying",
-        {
-          blobUrl,
-          attempt,
-          maxAttempts,
-        },
-      );
-      // Simple fixed backoff between attempts.
+    const shouldRetry = attempt < maxAttempts;
+    console.warn("[EdpakImport] Failed to fetch edpak blob", {
+      blobUrl,
+      status: response.status,
+      statusText: response.statusText,
+      attempt,
+      maxAttempts,
+      willRetry: shouldRetry,
+    });
+
+    if (shouldRetry) {
       await new Promise((resolve) => {
         setTimeout(resolve, delayMs);
       });
