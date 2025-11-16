@@ -121,6 +121,9 @@ export default async function AdminCourseEditPage({
             images?: number;
             videos?: number;
             missingFiles?: number;
+            coverImageFilePath?: string | null;
+            coverImageImported?: boolean;
+            coverImageUrl?: string | null;
           }
         | undefined;
 
@@ -153,6 +156,8 @@ export default async function AdminCourseEditPage({
       const expectedModules = parsedDetails?.modules ?? null;
       const expectedLessons = parsedDetails?.lessons ?? null;
       const missingFiles = parsedDetails?.missingFiles ?? 0;
+      const coverImageFilePath = parsedDetails?.coverImageFilePath ?? null;
+      const coverImageImported = parsedDetails?.coverImageImported ?? false;
 
       const missingComponents: string[] = [];
 
@@ -183,6 +188,12 @@ export default async function AdminCourseEditPage({
       if (placeholderLessonCount > 0) {
         missingComponents.push(
           `${placeholderLessonCount} lesson(s) are using placeholder content because their HTML could not be loaded from the edpak archive.`,
+        );
+      }
+
+      if (coverImageFilePath && (!coverImageImported || !course.coverImageUrl)) {
+        missingComponents.push(
+          "The course cover image defined in the manifest could not be imported. The card view may be missing its cover artwork.",
         );
       }
 

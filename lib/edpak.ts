@@ -35,6 +35,14 @@ type EdpakManifest = {
   lessons?: ManifestLesson[];
   files?: ManifestFile[];
   missingFiles?: string[];
+   coverImage?: {
+     fileId: string;
+     fileName: string;
+     contentType: string;
+     filePath: string;
+     description?: string;
+   };
+   coverDescription?: string;
   // Additional metadata keys from the spec are preserved in manifestJson.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
@@ -69,10 +77,16 @@ async function importEdpakCourseFromArrayBuffer(
     throw new Error("manifest.json must include a non-empty modules array");
   }
 
+  const courseDescription =
+    typeof manifest.coverDescription === "string" &&
+    manifest.coverDescription.trim().length > 0
+      ? manifest.coverDescription.trim()
+      : manifest.description ?? null;
+
   const course = await prisma.educationCourse.create({
     data: {
       name: manifest.title,
-      description: manifest.description ?? null,
+      description: courseDescription,
       status: "DEVELOPMENT",
       coverImageUrl: null,
       requiredLevel: "FREE",
@@ -157,6 +171,44 @@ async function importEdpakCourseFromArrayBuffer(
     ? manifest.missingFiles.length
     : 0;
 
+  const coverImageFilePath = manifest.coverImage?.filePath ?? null;
+  let coverImageImported = false;
+  let coverImageUrl: string | null = null;
+
+  if (coverImageFilePath) {
+    const coverEntry = zip.file(coverImageFilePath);
+    if (coverEntry) {
+      try {
+        const coverBuffer = await coverEntry.async("nodebuffer");
+        const { uploadCourseMedia } = await import("@/lib/blob");
+        const filename =
+          manifest.coverImage?.fileName ??
+          `${manifest.coverImage?.fileId ?? course.id}.jpg`;
+
+        const uploaded = await uploadCourseMedia(
+          coverBuffer,
+          "course-images",
+          `${course.id}-${filename}`,
+        );
+
+        coverImageImported = true;
+        coverImageUrl = uploaded.url;
+
+        await prisma.educationCourse.update({
+          where: { id: course.id },
+          data: {
+            coverImageUrl,
+          },
+        });
+      } catch (error) {
+        console.error(
+          "Failed to upload or persist course cover image from edpak",
+          error,
+        );
+      }
+    }
+  }
+
   const summaryParts = [
     `Imported course "${manifest.title}"`,
     `modules=${sortedModules.length}`,
@@ -169,6 +221,12 @@ async function importEdpakCourseFromArrayBuffer(
 
   if (missingFileCount > 0) {
     summaryParts.push(`missingFiles=${missingFileCount}`);
+  }
+
+  if (coverImageFilePath) {
+    summaryParts.push(
+      `coverImage=${coverImageImported ? "imported" : "missing"}`,
+    );
   }
 
   const summary = summaryParts.join(", ");
@@ -186,6 +244,9 @@ async function importEdpakCourseFromArrayBuffer(
     images: imageCount,
     videos: videoCount,
     missingFiles: missingFileCount,
+    coverImageFilePath,
+    coverImageImported,
+    coverImageUrl,
   };
 
   try {

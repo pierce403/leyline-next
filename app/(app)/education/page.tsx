@@ -14,6 +14,10 @@ export default async function EducationOverviewPage() {
     orderBy: {
       createdAt: "desc",
     },
+    include: {
+      modules: true,
+      lessons: true,
+    },
   });
 
   type CourseProgressMeta = {
@@ -78,13 +82,26 @@ export default async function EducationOverviewPage() {
             const lastUpdatedLabel = lastUpdated
               ? new Date(lastUpdated).toLocaleString()
               : "";
+            const moduleCount = course.modules.length;
+            const lessonCount = course.lessons.length;
 
             return (
               <article
                 key={course.id}
                 className="flex flex-col overflow-hidden rounded border bg-white text-sm shadow-sm"
               >
-                <div className="h-32 w-full bg-gradient-to-r from-lime-100 via-emerald-100 to-lime-200" />
+                <div className="h-32 w-full overflow-hidden bg-gray-200">
+                  {course.coverImageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={course.coverImageUrl}
+                      alt={course.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-gradient-to-r from-lime-100 via-emerald-100 to-lime-200" />
+                  )}
+                </div>
                 <div className="flex flex-1 flex-col justify-between p-4">
                   <div className="space-y-1">
                     <h2 className="text-sm font-semibold text-gray-900">
@@ -100,6 +117,10 @@ export default async function EducationOverviewPage() {
                       <span className="uppercase">
                         {course.requiredLevel.toLowerCase()}
                       </span>
+                    </p>
+                    <p className="text-[11px] text-gray-500">
+                      {moduleCount} module{moduleCount === 1 ? "" : "s"},{" "}
+                      {lessonCount} lesson{lessonCount === 1 ? "" : "s"}
                     </p>
                   </div>
                   <div className="mt-3 flex items-center justify-between">

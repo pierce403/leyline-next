@@ -37,16 +37,25 @@ async function createCourseAction() {
   redirect(`/admin/education/courses/${course.id}`);
 }
 
+type AdminCourseWithRelations = Awaited<
+  ReturnType<typeof prisma.educationCourse.findMany>
+>[number] & {
+  modules: { id: string }[];
+  lessons: { id: string }[];
+};
+
 export default async function AdminCoursesPage() {
-  let courses: Awaited<
-    ReturnType<typeof prisma.educationCourse.findMany>
-  > = [];
+  let courses: AdminCourseWithRelations[] = [];
   let loadError: Error | null = null;
 
   try {
     courses = await prisma.educationCourse.findMany({
       orderBy: { createdAt: "desc" },
       take: 50,
+      include: {
+        modules: true,
+        lessons: true,
+      },
     });
   } catch (error) {
     // Log full error so we can inspect it in Vercel logs.
@@ -102,6 +111,12 @@ export default async function AdminCoursesPage() {
                   Created
                 </th>
                 <th className="border-b px-3 py-2 text-left font-semibold text-gray-700">
+                  Modules
+                </th>
+                <th className="border-b px-3 py-2 text-left font-semibold text-gray-700">
+                  Lessons
+                </th>
+                <th className="border-b px-3 py-2 text-left font-semibold text-gray-700">
                   Actions
                 </th>
               </tr>
@@ -110,7 +125,7 @@ export default async function AdminCoursesPage() {
               {courses.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={7}
                     className="px-3 py-4 text-center text-xs text-gray-500"
                   >
                     No courses have been created yet.
@@ -133,6 +148,12 @@ export default async function AdminCoursesPage() {
                     </td>
                     <td className="border-t px-3 py-2 align-middle">
                       {course.createdAt.toISOString()}
+                    </td>
+                    <td className="border-t px-3 py-2 align-middle">
+                      {course.modules.length}
+                    </td>
+                    <td className="border-t px-3 py-2 align-middle">
+                      {course.lessons.length}
                     </td>
                     <td className="border-t px-3 py-2 align-middle">
                       <div className="flex flex-wrap items-center gap-2 text-[11px]">
