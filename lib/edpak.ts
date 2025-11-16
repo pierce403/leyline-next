@@ -386,12 +386,15 @@ export async function importEdpakCourseFromBlobUrl(
   } catch {
     throw new Error(`Invalid blobUrl (not a valid URL): ${blobUrl}`);
   }
+  // Strictly compare hostname and protocol
   if (
     parsed.protocol !== "https:" ||
-    parsed.hostname !== ALLOWED_BLOB_HOST ||
+    parsed.hostname.toLowerCase() !== ALLOWED_BLOB_HOST.toLowerCase() ||
     parsed.port !== "" ||
     parsed.username !== "" ||
-    parsed.password !== ""
+    parsed.password !== "" ||
+    parsed.search !== "" ||
+    parsed.hash !== ""
   ) {
     throw new Error(
       `blobUrl must refer to the trusted host (${ALLOWED_BLOB_HOST}), got ${parsed.hostname} (invalid protocol/host/port/credentials)`,
