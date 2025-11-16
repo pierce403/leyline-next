@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { EdpakImportForm } from "./EdpakImportForm";
 
+export const dynamic = "force-dynamic";
+
 async function deleteCourseAction(formData: FormData) {
   "use server";
 
