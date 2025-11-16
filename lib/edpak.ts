@@ -377,6 +377,24 @@ export async function importEdpakCourse(file: File): Promise<string> {
 export async function importEdpakCourseFromBlobUrl(
   blobUrl: string,
 ): Promise<string> {
+  // SSRF mitigation: only allow blob URLs to the trusted Vercel blob storage host.
+  // Adjust as needed for your storage solution.
+  const ALLOWED_BLOB_HOST = "blob.vercel-storage.com";
+  let parsed;
+  try {
+    parsed = new URL(blobUrl);
+  } catch {
+    throw new Error(`Invalid blobUrl (not a valid URL): ${blobUrl}`);
+  }
+  if (
+    parsed.protocol !== "https:" ||
+    parsed.hostname !== ALLOWED_BLOB_HOST
+  ) {
+    throw new Error(
+      `blobUrl must refer to the trusted host (${ALLOWED_BLOB_HOST}), got ${parsed.hostname}`,
+    );
+  }
+
   const maxAttempts = 3;
   const delayMs = 500;
 
