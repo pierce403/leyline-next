@@ -1,6 +1,7 @@
 import "server-only";
 
 import JSZip from "jszip";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 type ManifestModule = {
@@ -361,9 +362,16 @@ async function importEdpakCourseFromArrayBuffer(
       },
     });
   } catch (error) {
-    // If the import log table does not exist yet (e.g., migration not applied),
-    // do not fail the entire import; just log the issue for later inspection.
-    console.error("Failed to write EducationImportLog entry", error);
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2021"
+    ) {
+      console.warn(
+        "[EdpakImport] EducationImportLog table missing; run latest migrations to enable import audit logs.",
+      );
+    } else {
+      console.error("Failed to write EducationImportLog entry", error);
+    }
   }
 
   return course.id;
