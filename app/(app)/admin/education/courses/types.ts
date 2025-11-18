@@ -1,4 +1,4 @@
-import type { EducationStatus, MembershipLevel } from "@prisma/client";
+import type { EducationStatus, MembershipLevel, LessonContentType } from "@prisma/client";
 
 export type CourseModuleWithLessons = {
   id: string;
@@ -17,6 +17,8 @@ export type CourseModuleWithLessons = {
         id: string;
         name: string;
         description: string | null;
+        contentType: LessonContentType;
+        content: string | null;
       };
     }[];
   };

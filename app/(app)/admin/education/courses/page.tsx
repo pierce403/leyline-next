@@ -1,4 +1,4 @@
-import type { EducationStatus, MembershipLevel } from "@prisma/client";
+import type { EducationStatus, MembershipLevel, LessonContentType } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -139,6 +139,8 @@ async function updateLessonAction(formData: FormData) {
 
   const name = (formData.get("name") ?? "").toString().trim();
   const descriptionRaw = formData.get("description");
+  const contentTypeRaw = formData.get("contentType");
+  const contentRaw = formData.get("content");
 
   if (!name) {
     throw new Error("Lesson name is required");
@@ -149,11 +151,21 @@ async function updateLessonAction(formData: FormData) {
       ? descriptionRaw.trim()
       : null;
 
+  const content =
+    typeof contentRaw === "string" && contentRaw.trim().length > 0
+      ? contentRaw.trim()
+      : null;
+
   await prisma.educationLesson.update({
     where: { id: lessonId },
     data: {
       name,
       description,
+      contentType:
+        typeof contentTypeRaw === "string"
+          ? (contentTypeRaw as LessonContentType)
+          : undefined,
+      content,
     },
   });
 

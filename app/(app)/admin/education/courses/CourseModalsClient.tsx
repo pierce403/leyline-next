@@ -178,7 +178,7 @@ export function CourseModalsClient({
                               <li key={ml.id} className="rounded border border-gray-100 bg-gray-50 p-2">
                                 <form
                                   action={updateLessonAction}
-                                  className="flex flex-1 flex-col gap-1"
+                                  className="flex flex-1 flex-col gap-2"
                                 >
                                   <input type="hidden" name="courseId" value={selectedCourse.id} />
                                   <input type="hidden" name="lessonId" value={ml.lesson.id} />
@@ -188,6 +188,7 @@ export function CourseModalsClient({
                                       name="name"
                                       defaultValue={ml.lesson.name}
                                       className="w-full rounded border px-2 py-1 text-xs text-gray-900 md:max-w-xs"
+                                      placeholder="Lesson name"
                                     />
                                     <input
                                       type="text"
@@ -196,13 +197,57 @@ export function CourseModalsClient({
                                       placeholder="Lesson description"
                                       className="w-full rounded border px-2 py-1 text-xs text-gray-900"
                                     />
-                                    <button
-                                      type="submit"
-                                      className="mt-1 rounded border border-gray-300 px-2 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-50 md:mt-0"
-                                    >
-                                      Save
-                                    </button>
                                   </div>
+                                  <div className="grid gap-2 md:grid-cols-2">
+                                    <div>
+                                      <label className="mb-1 block text-[11px] font-semibold text-gray-700">
+                                        Content Type
+                                      </label>
+                                      <select
+                                        name="contentType"
+                                        defaultValue={ml.lesson.contentType}
+                                        className="w-full rounded border px-2 py-1 text-xs text-gray-900"
+                                      >
+                                        <option value="NONE">None</option>
+                                        <option value="TEXT">Text</option>
+                                        <option value="HTML">HTML</option>
+                                        <option value="IMAGE">Image URL</option>
+                                        <option value="VIDEO">Video URL</option>
+                                        <option value="MULTIPLE_CHOICE">Quiz (JSON)</option>
+                                      </select>
+                                    </div>
+                                    {ml.lesson.contentType !== "NONE" && (
+                                      <div>
+                                        <label className="mb-1 block text-[11px] font-semibold text-gray-700">
+                                          {ml.lesson.contentType === "IMAGE" && "Image URL"}
+                                          {ml.lesson.contentType === "VIDEO" && "Video URL"}
+                                          {ml.lesson.contentType === "MULTIPLE_CHOICE" && "Quiz JSON"}
+                                          {(ml.lesson.contentType === "TEXT" || ml.lesson.contentType === "HTML") && "Content"}
+                                        </label>
+                                        <textarea
+                                          name="content"
+                                          defaultValue={ml.lesson.content ?? ""}
+                                          placeholder={
+                                            ml.lesson.contentType === "IMAGE"
+                                              ? "https://example.com/image.jpg"
+                                              : ml.lesson.contentType === "VIDEO"
+                                                ? "https://example.com/video.mp4"
+                                                : ml.lesson.contentType === "MULTIPLE_CHOICE"
+                                                  ? '{"question":"...","answers":[...]}'
+                                                  : "Enter content here..."
+                                          }
+                                          rows={ml.lesson.contentType === "MULTIPLE_CHOICE" ? 4 : 2}
+                                          className="w-full rounded border px-2 py-1 text-xs text-gray-900 font-mono"
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <button
+                                    type="submit"
+                                    className="self-start rounded border border-gray-300 px-2 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-50"
+                                  >
+                                    Save Lesson
+                                  </button>
                                 </form>
                               </li>
                             ))}
