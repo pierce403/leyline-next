@@ -210,7 +210,6 @@ export function CourseModalsClient({
                                       >
                                         <option value="NONE">None</option>
                                         <option value="TEXT">Text</option>
-                                        <option value="HTML">HTML</option>
                                         <option value="IMAGE">Image URL</option>
                                         <option value="VIDEO">Video URL</option>
                                         <option value="MULTIPLE_CHOICE">Quiz (JSON)</option>
@@ -222,7 +221,7 @@ export function CourseModalsClient({
                                           {ml.lesson.contentType === "IMAGE" && "Image URL"}
                                           {ml.lesson.contentType === "VIDEO" && "Video URL"}
                                           {ml.lesson.contentType === "MULTIPLE_CHOICE" && "Quiz JSON"}
-                                          {(ml.lesson.contentType === "TEXT" || ml.lesson.contentType === "HTML") && "Content"}
+                                          {ml.lesson.contentType === "TEXT" && "Content"}
                                         </label>
                                         <textarea
                                           name="content"
