@@ -172,15 +172,18 @@ type AdminCourseWithRelations = Awaited<
 };
 
 type AdminCoursesPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     courseId?: string;
     infoCourseId?: string;
-  };
+  }>;
 };
 
 export default async function AdminCoursesPage({
   searchParams,
 }: AdminCoursesPageProps) {
+  // Await searchParams since it's a Promise in Next.js 16
+  const params = await searchParams;
+
   let courses: AdminCourseWithRelations[] = [];
   let loadError: Error | null = null;
 
@@ -200,15 +203,15 @@ export default async function AdminCoursesPage({
   }
 
   const selectedCourseId =
-    typeof searchParams?.courseId === "string" &&
-    searchParams.courseId.trim().length > 0
-      ? searchParams.courseId
+    typeof params?.courseId === "string" &&
+      params.courseId.trim().length > 0
+      ? params.courseId
       : null;
 
   const infoCourseId =
-    typeof searchParams?.infoCourseId === "string" &&
-    searchParams.infoCourseId.trim().length > 0
-      ? searchParams.infoCourseId
+    typeof params?.infoCourseId === "string" &&
+      params.infoCourseId.trim().length > 0
+      ? params.infoCourseId
       : null;
 
   console.log("[AdminCoursesPage] render start", {
@@ -268,16 +271,16 @@ export default async function AdminCoursesPage({
           if (latestImportLog) {
             let parsedDetails:
               | {
-                  modules?: number;
-                  lessons?: number;
-                  quizzes?: number;
-                  files?: number;
-                  images?: number;
-                  videos?: number;
-                  missingFiles?: number;
-                  coverImageFilePath?: string | null;
-                  coverImageImported?: boolean;
-                }
+                modules?: number;
+                lessons?: number;
+                quizzes?: number;
+                files?: number;
+                images?: number;
+                videos?: number;
+                missingFiles?: number;
+                coverImageFilePath?: string | null;
+                coverImageImported?: boolean;
+              }
               | undefined;
 
             if (latestImportLog.details) {
