@@ -170,7 +170,7 @@ function UserMenu({
               Account Settings
             </Link>
             <a
-              href="/auth/logout"
+              href="/api/auth/logout"
               className="mt-1 block px-3 py-1.5 text-[11px] font-medium text-red-600 hover:bg-gray-50"
             >
               Log Out
@@ -213,33 +213,30 @@ function ThemePreference() {
       <button
         type="button"
         onClick={() => handleChange("light")}
-        className={`flex-1 rounded border px-2 py-1 text-[11px] ${
-          mode === "light"
+        className={`flex-1 rounded border px-2 py-1 text-[11px] ${mode === "light"
             ? "border-leyline-blue bg-leyline-blue/10 text-leyline-blue"
             : "border-gray-200 text-gray-700 hover:bg-gray-50"
-        }`}
+          }`}
       >
         Light
       </button>
       <button
         type="button"
         onClick={() => handleChange("dark")}
-        className={`flex-1 rounded border px-2 py-1 text-[11px] ${
-          mode === "dark"
+        className={`flex-1 rounded border px-2 py-1 text-[11px] ${mode === "dark"
             ? "border-leyline-blue bg-leyline-blue/10 text-leyline-blue"
             : "border-gray-200 text-gray-700 hover:bg-gray-50"
-        }`}
+          }`}
       >
         Dark
       </button>
       <button
         type="button"
         onClick={() => handleChange("system")}
-        className={`flex-1 rounded border px-2 py-1 text-[11px] ${
-          mode === "system"
+        className={`flex-1 rounded border px-2 py-1 text-[11px] ${mode === "system"
             ? "border-leyline-blue bg-leyline-blue/10 text-leyline-blue"
             : "border-gray-200 text-gray-700 hover:bg-gray-50"
-        }`}
+          }`}
       >
         System
       </button>
