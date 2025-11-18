@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -185,20 +185,22 @@ function UserMenu({
 type ThemeMode = "light" | "dark" | "system";
 
 function ThemePreference() {
-  const [mode, setMode] = useState<ThemeMode>(() => {
-    if (typeof window === "undefined") {
-      return "system";
-    }
+  const [mode, setMode] = useState<ThemeMode>("system");
+
+  // Sync with localStorage after mount to avoid hydration mismatch
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
     const stored = window.localStorage.getItem("leyline-theme") as
       | ThemeMode
       | null;
     if (stored === "light" || stored === "dark" || stored === "system") {
+      setMode(stored);
       applyTheme(stored);
-      return stored;
+    } else {
+      applyTheme("system");
     }
-    applyTheme("system");
-    return "system";
-  });
+  }, []);
 
   const handleChange = (value: ThemeMode) => {
     setMode(value);
@@ -214,8 +216,8 @@ function ThemePreference() {
         type="button"
         onClick={() => handleChange("light")}
         className={`flex-1 rounded border px-2 py-1 text-[11px] ${mode === "light"
-            ? "border-leyline-blue bg-leyline-blue/10 text-leyline-blue"
-            : "border-gray-200 text-gray-700 hover:bg-gray-50"
+          ? "border-leyline-blue bg-leyline-blue/10 text-leyline-blue"
+          : "border-gray-200 text-gray-700 hover:bg-gray-50"
           }`}
       >
         Light
@@ -224,8 +226,8 @@ function ThemePreference() {
         type="button"
         onClick={() => handleChange("dark")}
         className={`flex-1 rounded border px-2 py-1 text-[11px] ${mode === "dark"
-            ? "border-leyline-blue bg-leyline-blue/10 text-leyline-blue"
-            : "border-gray-200 text-gray-700 hover:bg-gray-50"
+          ? "border-leyline-blue bg-leyline-blue/10 text-leyline-blue"
+          : "border-gray-200 text-gray-700 hover:bg-gray-50"
           }`}
       >
         Dark
@@ -234,8 +236,8 @@ function ThemePreference() {
         type="button"
         onClick={() => handleChange("system")}
         className={`flex-1 rounded border px-2 py-1 text-[11px] ${mode === "system"
-            ? "border-leyline-blue bg-leyline-blue/10 text-leyline-blue"
-            : "border-gray-200 text-gray-700 hover:bg-gray-50"
+          ? "border-leyline-blue bg-leyline-blue/10 text-leyline-blue"
+          : "border-gray-200 text-gray-700 hover:bg-gray-50"
           }`}
       >
         System
