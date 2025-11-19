@@ -36,7 +36,7 @@ export function MainNavbar({
 
   return (
     <header className="border-b bg-white">
-      <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4">
+      <div className="mx-auto flex h-14 w-full max-w-screen-2xl items-center justify-between px-4">
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2">
             <span className="rounded bg-leyline-primary px-3 py-1 text-sm font-semibold uppercase tracking-wide text-white">

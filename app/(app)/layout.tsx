@@ -18,10 +18,10 @@ export default async function AppLayout({
 
   const user = session?.user as
     | {
-        name?: string;
-        email?: string;
-        picture?: string;
-      }
+      name?: string;
+      email?: string;
+      picture?: string;
+    }
     | undefined;
 
   const userName = user?.name ?? user?.email ?? undefined;
@@ -46,7 +46,7 @@ export default async function AppLayout({
       const auth0User = await fetchAuth0UserById(auth0UserId);
       const membership =
         auth0User?.app_metadata?.membership &&
-        typeof auth0User.app_metadata.membership === "string"
+          typeof auth0User.app_metadata.membership === "string"
           ? auth0User.app_metadata.membership.toLowerCase()
           : "free";
 
@@ -75,7 +75,7 @@ export default async function AppLayout({
         membershipLabel={membershipLabel}
         showAdminLink={showAdminLink}
       />
-      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-6">
+      <main className="mx-auto flex w-full max-w-screen-2xl flex-1 flex-col px-4 py-6">
         {children}
       </main>
     </div>

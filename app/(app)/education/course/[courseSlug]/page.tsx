@@ -1,10 +1,10 @@
 import type { ReactElement } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { LessonContentViewer } from "../LessonContentViewer";
 import type { LessonContentType, LessonProgressStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateCurrentUser } from "@/lib/current-user";
-import { QuizLesson } from "../QuizLesson";
 
 type CoursePageRouteParams = {
   courseSlug: string;
@@ -130,7 +130,7 @@ export default async function CourseDetailPage({
 
   const requestedLessonId =
     typeof resolvedSearch.lessonId === "string" &&
-    resolvedSearch.lessonId.length > 0
+      resolvedSearch.lessonId.length > 0
       ? resolvedSearch.lessonId
       : null;
 
@@ -276,11 +276,10 @@ export default async function CourseDetailPage({
                         <li key={ml.id}>
                           <Link
                             href={`${coursePath}?lessonId=${ml.lesson.id}`}
-                            className={`flex items-center justify-between rounded px-2 py-1 ${
-                              isActive
+                            className={`flex items-center justify-between rounded px-2 py-1 ${isActive
                                 ? "bg-leyline-primary/10 text-leyline-primary"
                                 : "text-gray-700 hover:bg-gray-50"
-                            }`}
+                              }`}
                           >
                             <span className="truncate">
                               {ml.lesson.name}
@@ -340,53 +339,14 @@ export default async function CourseDetailPage({
                   {activeLesson.lesson.description}
                 </p>
               )}
-              <div className="rounded border bg-gray-50 p-2 text-sm text-gray-800">
-                {renderLessonContent(activeLesson.lesson.contentType, activeLesson.lesson.content)}
-              </div>
+              <LessonContentViewer
+                contentType={activeLesson.lesson.contentType}
+                content={activeLesson.lesson.content}
+              />
             </>
           )}
         </section>
       </div>
     </div>
   );
-}
-
-function renderLessonContent(
-  contentType: LessonContentType,
-  content: string | null,
-): ReactElement {
-  if (!content || content.length === 0) {
-    return (
-      <p className="text-xs text-gray-500">
-        This lesson does not have any content yet.
-      </p>
-    );
-  }
-
-  if (contentType === "IMAGE") {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={content}
-        alt=""
-        className="mx-auto max-h-[560px] w-auto max-w-full rounded bg-white object-contain"
-      />
-    );
-  }
-
-  if (contentType === "VIDEO") {
-    return (
-      <video
-        src={content}
-        controls
-        className="mx-auto max-h-[560px] w-auto max-w-full rounded bg-black"
-      />
-    );
-  }
-
-  if (contentType === "MULTIPLE_CHOICE") {
-    return <QuizLesson content={content} />;
-  }
-
-  return <p className="whitespace-pre-wrap text-sm text-gray-800">{content}</p>;
 }
