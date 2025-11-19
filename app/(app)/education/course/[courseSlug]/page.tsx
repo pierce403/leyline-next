@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LessonContentViewer } from "../LessonContentViewer";
+import { CourseViewer } from "../CourseViewer";
 import type { LessonContentType, LessonProgressStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateCurrentUser } from "@/lib/current-user";
@@ -222,131 +223,13 @@ export default async function CourseDetailPage({
       : null;
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-2 border-b pb-3">
-        <div className="text-[11px] font-semibold uppercase text-leyline-primary">
-          Course
-        </div>
-        <h1 className="heading-leyline text-sm text-gray-800">
-          {course.name}
-        </h1>
-        {course.description && (
-          <p className="text-xs text-gray-600">{course.description}</p>
-        )}
-        {user && (
-          <p className="text-[11px] text-gray-500">
-            Progress: {percentCompleted.toFixed(0)}%
-          </p>
-        )}
-      </div>
-
-      <div className="flex gap-4">
-        <aside className="w-64 shrink-0 rounded border bg-white p-3 text-xs shadow-sm">
-          <div className="mb-2 text-[11px] font-semibold uppercase text-gray-500">
-            Lessons
-          </div>
-          {modulesWithLessons.length === 0 ? (
-            <p className="text-[11px] text-gray-500">
-              This course does not have any lessons yet.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {modulesWithLessons.map((cm, moduleIndex) => (
-                <div key={cm.id} className="space-y-1">
-                  <div className="flex items-center justify-between text-[11px] font-semibold text-gray-800">
-                    <span>
-                      {moduleIndex + 1}. {cm.module.name}
-                    </span>
-                    <span className="text-[10px] text-gray-500">
-                      {cm.module.lessons.length} lesson
-                      {cm.module.lessons.length === 1 ? "" : "s"}
-                    </span>
-                  </div>
-                  <ul className="space-y-0.5 border-l border-gray-200 pl-2">
-                    {cm.module.lessons.map((ml) => {
-                      const isActive =
-                        activeLesson &&
-                        activeLesson.lesson.id === ml.lesson.id;
-                      const progress = lessonProgressById.get(ml.lesson.id);
-                      const isVisited =
-                        progress != null &&
-                        progress.lastViewedTimestamp !== null;
-
-                      return (
-                        <li key={ml.id}>
-                          <Link
-                            href={`${coursePath}?lessonId=${ml.lesson.id}`}
-                            className={`flex items-center justify-between rounded px-2 py-1 ${isActive
-                                ? "bg-leyline-primary/10 text-leyline-primary"
-                                : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                          >
-                            <span className="truncate">
-                              {ml.lesson.name}
-                            </span>
-                            {isVisited && (
-                              <span
-                                className="ml-2 text-[11px] text-emerald-600"
-                                aria-label="Completed lesson"
-                              >
-                                ✓
-                              </span>
-                            )}
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          )}
-        </aside>
-
-        <section className="min-w-0 flex-1 rounded border bg-white p-4 text-sm shadow-sm">
-          {activeLesson && (
-            <>
-              <div className="mb-3 flex items-center justify-between">
-                <div>
-                  <div className="text-[11px] font-semibold uppercase text-gray-500">
-                    {course.name}
-                  </div>
-                  <h2 className="text-sm font-semibold text-gray-900">
-                    {activeLesson.lesson.name}
-                  </h2>
-                </div>
-                <div className="flex gap-2 text-[11px]">
-                  {previousLesson && (
-                    <Link
-                      href={`${coursePath}?lessonId=${previousLesson.lesson.id}`}
-                      className="rounded border border-gray-300 px-2 py-1 text-gray-700 hover:bg-gray-50"
-                    >
-                      ← Previous
-                    </Link>
-                  )}
-                  {nextLesson && (
-                    <Link
-                      href={`${coursePath}?lessonId=${nextLesson.lesson.id}`}
-                      className="rounded border border-gray-300 px-2 py-1 text-gray-700 hover:bg-gray-50"
-                    >
-                      Next →
-                    </Link>
-                  )}
-                </div>
-              </div>
-              {activeLesson.lesson.description && (
-                <p className="mb-3 text-xs text-gray-600">
-                  {activeLesson.lesson.description}
-                </p>
-              )}
-              <LessonContentViewer
-                contentType={activeLesson.lesson.contentType}
-                content={activeLesson.lesson.content}
-              />
-            </>
-          )}
-        </section>
-      </div>
-    </div>
+    <CourseViewer
+      course={course}
+      modulesWithLessons={modulesWithLessons as any}
+      lessonProgressById={lessonProgressById}
+      activeLessonId={typeof activeLesson === 'object' && activeLesson ? activeLesson.lesson.id : null}
+      percentCompleted={percentCompleted}
+      user={user}
+    />
   );
 }

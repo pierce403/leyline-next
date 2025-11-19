@@ -45,13 +45,20 @@ export function LessonEditor({
 
     // Image specific state
     const [isImageExpanded, setIsImageExpanded] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Initialize quiz state if needed when switching to quiz type
+    // Sync local state when the selected lesson changes
     useEffect(() => {
-        if (contentType === "MULTIPLE_CHOICE") {
+        setContentType(lesson.contentType);
+        const newContent = lesson.content ?? "";
+        setContentValue(newContent);
+        setIsImageExpanded(false);
+
+        // Parse quiz data immediately if it's a quiz
+        if (lesson.contentType === "MULTIPLE_CHOICE") {
             try {
-                const parsed = contentValue ? JSON.parse(contentValue) : { question: "", answers: [] };
-                // Basic validation
+                const parsed = newContent ? JSON.parse(newContent) : { question: "", answers: [] };
                 if (typeof parsed === 'object' && parsed !== null) {
                     setQuizState({
                         question: parsed.question || "",
@@ -59,11 +66,10 @@ export function LessonEditor({
                     });
                 }
             } catch (e) {
-                // If parse fails, just reset to empty
                 setQuizState({ question: "", answers: [] });
             }
         }
-    }, [contentType]);
+    }, [lesson]);
 
     // Update content string when quiz state changes
     const updateQuizContent = (newState: QuizContent) => {
@@ -94,21 +100,39 @@ export function LessonEditor({
     };
 
     const setCorrectAnswer = (index: number) => {
-        // If we want single choice, we uncheck others. 
-        // Assuming multiple choice could have multiple correct answers? 
-        // Usually "Multiple Choice" implies one correct answer in simple systems, 
-        // but let's support single selection for "correct" for now to be safe, or toggle.
-        // Let's assume single correct answer for simplicity unless specified otherwise.
-        // The prompt didn't specify, but standard quizzes usually have one correct answer.
-        // However, the data structure `correct: boolean` on each answer allows multiple.
-        // I'll implement it as a radio-like behavior (click to set this one as correct, others false)
-        // but allow toggling if needed? Let's stick to radio behavior for "Correct Answer".
-
         const newAnswers = quizState.answers.map((a, i) => ({
             ...a,
             correct: i === index
         }));
         updateQuizContent({ ...quizState, answers: newAnswers });
+    };
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || e.target.files.length === 0) return;
+
+        const file = e.target.files[0];
+        setIsUploading(true);
+
+        try {
+            // Dynamically import to avoid SSR issues if any, though client component is fine
+            const { upload } = await import("@vercel/blob/client");
+
+            const newBlob = await upload(file.name, file, {
+                access: 'public',
+                handleUploadUrl: '/api/edpak/upload',
+            });
+
+            setContentValue(newBlob.url);
+        } catch (error) {
+            console.error("Error uploading image:", error);
+            alert("Failed to upload image. Please try again.");
+        } finally {
+            setIsUploading(false);
+            // Reset file input
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
+        }
     };
 
     return (
@@ -143,12 +167,29 @@ export function LessonEditor({
                     <select
                         name="contentType"
                         value={contentType}
-                        onChange={(e) => setContentType(e.target.value as LessonContentType)}
+                        onChange={(e) => {
+                            const newType = e.target.value as LessonContentType;
+                            setContentType(newType);
+                            // If switching to quiz, try to parse existing content if it looks like JSON
+                            if (newType === "MULTIPLE_CHOICE") {
+                                try {
+                                    const parsed = contentValue ? JSON.parse(contentValue) : { question: "", answers: [] };
+                                    if (typeof parsed === 'object' && parsed !== null) {
+                                        setQuizState({
+                                            question: parsed.question || "",
+                                            answers: Array.isArray(parsed.answers) ? parsed.answers : []
+                                        });
+                                    }
+                                } catch {
+                                    setQuizState({ question: "", answers: [] });
+                                }
+                            }
+                        }}
                         className="w-full rounded border px-2 py-1 text-xs text-gray-900"
                     >
                         <option value="NONE">None</option>
                         <option value="TEXT">Text</option>
-                        <option value="IMAGE">Image URL</option>
+                        <option value="IMAGE">Image</option>
                         <option value="VIDEO">Video URL</option>
                         <option value="HTML">HTML Content</option>
                         <option value="MULTIPLE_CHOICE">Quiz (JSON)</option>
@@ -159,7 +200,7 @@ export function LessonEditor({
                 {contentType !== "NONE" && (
                     <div className="flex flex-col gap-2">
                         <label className="block text-[11px] font-semibold text-gray-700">
-                            {contentType === "IMAGE" && "Image URL"}
+                            {contentType === "IMAGE" && "Image"}
                             {contentType === "VIDEO" && "Video URL"}
                             {contentType === "MULTIPLE_CHOICE" && "Quiz Editor"}
                             {(contentType === "TEXT" || contentType === "HTML") && "Content"}
@@ -221,35 +262,66 @@ export function LessonEditor({
                         ) : (
                             /* STANDARD EDITOR (TEXT, IMAGE, VIDEO, HTML) */
                             <div className="relative">
-                                {contentType === "IMAGE" && contentValue && (
-                                    <div className="mb-2 flex items-center gap-3">
-                                        <div
-                                            className="relative h-16 w-16 shrink-0 cursor-pointer overflow-hidden rounded border border-gray-200 bg-gray-100 hover:opacity-90"
-                                            onClick={() => setIsImageExpanded(true)}
-                                        >
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img src={contentValue} alt="Preview" className="h-full w-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />
-                                        </div>
-                                        <p className="text-[10px] text-gray-500">
-                                            Click thumbnail to expand.
-                                        </p>
-                                    </div>
-                                )}
+                                {contentType === "IMAGE" ? (
+                                    <div className="space-y-2">
+                                        {contentValue && (
+                                            <div className="flex items-center gap-3 rounded border border-gray-200 bg-gray-50 p-2">
+                                                <div
+                                                    className="relative h-16 w-16 shrink-0 cursor-pointer overflow-hidden rounded border border-gray-200 bg-white hover:opacity-90"
+                                                    onClick={() => setIsImageExpanded(true)}
+                                                >
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img src={contentValue} alt="Preview" className="h-full w-full object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="truncate text-[10px] text-gray-500" title={contentValue}>
+                                                        {contentValue}
+                                                    </p>
+                                                    <p className="text-[10px] text-gray-400">
+                                                        Click thumbnail to expand
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
 
-                                <textarea
-                                    name="content"
-                                    value={contentValue}
-                                    onChange={(e) => setContentValue(e.target.value)}
-                                    placeholder={
-                                        contentType === "IMAGE"
-                                            ? "https://example.com/image.jpg"
-                                            : contentType === "VIDEO"
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                ref={fileInputRef}
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleImageUpload}
+                                                className="hidden"
+                                                id="lesson-image-upload"
+                                                disabled={isUploading}
+                                            />
+                                            <label
+                                                htmlFor="lesson-image-upload"
+                                                className={`cursor-pointer rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            >
+                                                {isUploading ? 'Uploading...' : 'Choose Image...'}
+                                            </label>
+                                            <span className="text-[10px] text-gray-500">
+                                                {isUploading ? 'Please wait...' : 'Upload a new image to replace the current one.'}
+                                            </span>
+                                        </div>
+
+                                        {/* Hidden input to submit the URL */}
+                                        <input type="hidden" name="content" value={contentValue} />
+                                    </div>
+                                ) : (
+                                    <textarea
+                                        name="content"
+                                        value={contentValue}
+                                        onChange={(e) => setContentValue(e.target.value)}
+                                        placeholder={
+                                            contentType === "VIDEO"
                                                 ? "https://example.com/video.mp4"
                                                 : "Enter content here..."
-                                    }
-                                    rows={contentType === "TEXT" || contentType === "HTML" ? 4 : 2}
-                                    className="w-full rounded border px-2 py-1 text-xs text-gray-900 font-mono"
-                                />
+                                        }
+                                        rows={contentType === "TEXT" || contentType === "HTML" ? 4 : 2}
+                                        className="w-full rounded border px-2 py-1 text-xs text-gray-900 font-mono"
+                                    />
+                                )}
                             </div>
                         )}
                     </div>
@@ -259,6 +331,7 @@ export function LessonEditor({
             <button
                 type="submit"
                 className="self-start rounded border border-gray-300 px-2 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-50"
+                disabled={isUploading}
             >
                 Save Lesson
             </button>
@@ -272,7 +345,11 @@ export function LessonEditor({
                     <div className="relative max-h-full max-w-full overflow-auto">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={contentValue} alt="Expanded Preview" className="max-h-[90vh] rounded shadow-2xl" />
-                        <button className="absolute top-2 right-2 rounded-full bg-white/20 p-1 text-white hover:bg-white/40">
+                        <button
+                            type="button"
+                            className="absolute top-2 right-2 rounded-full bg-white/20 p-1 text-white hover:bg-white/40"
+                            onClick={() => setIsImageExpanded(false)}
+                        >
                             ✕
                         </button>
                     </div>
