@@ -13,6 +13,7 @@ import {
 import { getCompanyDetails, CompanyDetail } from "@/app/db/companies";
 import { FormattedDate } from "@/components/ui/formatted-date";
 import DeleteCompanyButton from "@/components/companies/delete-company-button";
+import EditCompanyButton from "@/components/companies/edit-company-button";
 
 // Mock Fallback Data (for demo IDs 1-7)
 const MOCK_DETAILS: Record<string, CompanyDetail> = {
@@ -21,6 +22,7 @@ const MOCK_DETAILS: Record<string, CompanyDetail> = {
     name: 'ABB',
     location: 'Zurich, Switzerland',
     type: null,
+    notes: null,
     investments: [
       { id: 'inv1', investmentType: 'SAFE Note', owned: 0, value: 0 }
     ],
@@ -61,10 +63,7 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
           {company.name}
         </h1>
         <div className="flex justify-center gap-3">
-          <button className="flex items-center gap-2 rounded border border-sky-400 bg-white px-3 py-1.5 text-xs font-medium text-sky-500 hover:bg-sky-50 transition-colors">
-            <FontAwesomeIcon icon={faEdit} className="h-3 w-3" />
-            Edit Company
-          </button>
+          <EditCompanyButton company={company} />
           <button className="flex items-center gap-2 rounded border border-sky-400 bg-white px-3 py-1.5 text-xs font-medium text-sky-500 hover:bg-sky-50 transition-colors">
             <FontAwesomeIcon icon={faCloudUploadAlt} className="h-3 w-3" />
             Upload Document
@@ -80,8 +79,19 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
       {/* Overview Section */}
       <div className="mb-12">
         <div className="mb-2 font-bold text-gray-700">{company.name}</div>
-        <div className="text-sm text-gray-500 mb-6">
-          {company.location || company.type || 'No location set'}
+        <div className="text-sm text-gray-500 mb-6 space-y-1">
+          {company.type && (
+            <div><span className="font-semibold text-gray-600">Industry:</span> {company.type}</div>
+          )}
+          {company.location && (
+            <div><span className="font-semibold text-gray-600">Location:</span> {company.location}</div>
+          )}
+          {company.notes && (
+            <div className="pt-2 italic">{company.notes}</div>
+          )}
+          {!company.type && !company.location && !company.notes && (
+            <div className="italic text-gray-400">No additional details provided.</div>
+          )}
         </div>
 
         {/* Portfolio Value Box */}

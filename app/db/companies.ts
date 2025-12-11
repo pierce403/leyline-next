@@ -46,6 +46,7 @@ export async function getCompanies(): Promise<CompanySummary[]> {
 export type CompanyDetail = CompanySummary & {
     documents: { id: string; title: string; url: string; createdAt: Date }[];
     companyNotes: { id: string; content: string; createdAt: Date }[];
+    notes: string | null;  // Added notes field
     investments: {
         id: string;
         investmentType: string;
@@ -63,6 +64,7 @@ export async function getCompanyDetails(companyId: string): Promise<CompanyDetai
                 name: true,
                 location: true,
                 type: true,
+                notes: true, // Fetch notes
                 documents: {
                     select: { id: true, title: true, url: true, createdAt: true },
                     orderBy: { createdAt: 'desc' }
@@ -77,6 +79,7 @@ export async function getCompanyDetails(companyId: string): Promise<CompanyDetai
             }
         });
         return company;
+
     } catch (error) {
         console.error("Error fetching company details:", error);
         return null;
