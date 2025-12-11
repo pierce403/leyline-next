@@ -290,13 +290,36 @@ model Company {
   id          String        @id @default(uuid())
   name        String
   type        String?
-  notes       String?
+  location    String?
+  notes       String?       // Keeping for backward compat or summary
   tags        String[]
 
   investments Investment[]
+  documents   CompanyDocument[]
+  companyNotes CompanyNote[]
 
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+}
+
+model CompanyDocument {
+  id        String   @id @default(uuid())
+  companyId String
+  title     String
+  url       String
+  createdAt DateTime @default(now())
+
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+model CompanyNote {
+  id        String   @id @default(uuid())
+  companyId String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
 }
 
 /// Individual investment associated with a user and company.
