@@ -24,10 +24,7 @@ export async function getCompanies(): Promise<CompanySummary[]> {
 
         const companies = await prisma.company.findMany({
             where: {
-                OR: [
-                    { userId: user.id },
-                    { userId: null } // Optional: Keep seeing global/legacy companies, or remove this line to STRICTLY ONLY see own.
-                ]
+                userId: user.id
             },
             orderBy: {
                 name: 'asc'

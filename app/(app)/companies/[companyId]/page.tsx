@@ -12,6 +12,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { getCompanyDetails, CompanyDetail } from "@/app/db/companies";
 import { FormattedDate } from "@/components/ui/formatted-date";
+import DeleteCompanyButton from "@/components/companies/delete-company-button";
 
 // Mock Fallback Data (for demo IDs 1-7)
 const MOCK_DETAILS: Record<string, CompanyDetail> = {
@@ -72,6 +73,7 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
             <FontAwesomeIcon icon={faStickyNote} className="h-3 w-3" />
             New Note
           </button>
+          <DeleteCompanyButton companyId={company.id} />
         </div>
       </div>
 
