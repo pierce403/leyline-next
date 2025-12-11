@@ -13,20 +13,17 @@ export async function getUserDashboardEducationProgress(
     const user = await prisma.user.findUnique({
         where: { auth0UserId },
         include: {
-            programProgress: {
+            // Fetch Course Progress
+            courseProgress: {
                 where: {
-                    // We only want programs that are NOT completed? 
-                    // The screenshot shows "Educational Progress", usually implying things in flight.
-                    // But it also shows "Completed" column. So maybe all active progress?
-                    // "Table listing incomplete education programs" says the spec (TRANSITION_PLAN.md 5.2.1)
                     percentCompleted: {
                         lt: 100
                     }
                 },
                 include: {
-                    program: true,
+                    course: true,
                 },
-                take: 5, // Limit to reasonable number for dashboard
+                take: 5,
                 orderBy: {
                     latestActionTimestamp: 'desc'
                 }
@@ -38,9 +35,12 @@ export async function getUserDashboardEducationProgress(
         return [];
     }
 
-    return user.programProgress.map((p) => ({
-        id: p.programId,
-        name: p.program.name,
+    // Map course progress to the dashboard format
+    // Note: The UI label says "Program", but effectively we are showing Courses here 
+    // because that's what the user interacts with primarily in the current implementation.
+    return user.courseProgress.map((p) => ({
+        id: p.courseId,
+        name: p.course.name,
         percentCompleted: p.percentCompleted,
         lastAccessed: p.latestActionTimestamp,
     }));
