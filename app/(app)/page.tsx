@@ -4,6 +4,8 @@ import { faFileLines } from "@fortawesome/free-solid-svg-icons";
 import { getAuth0Session } from "@/lib/auth0";
 import { getUserDashboardEducationProgress } from "@/app/db/education";
 
+import { FormattedDate } from "@/components/ui/formatted-date";
+
 // Mock Data
 const investments = [
   {
@@ -310,11 +312,10 @@ export default async function DashboardPage() {
                           {prog.percentCompleted.toFixed(0)}%
                         </td>
                         <td className="px-4 py-3 text-right text-gray-500 text-xs">
-                          {prog.lastAccessed ? new Date(prog.lastAccessed).toLocaleDateString(undefined, {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric'
-                          }) : 'Never'}
+                          <FormattedDate
+                            date={prog.lastAccessed}
+                            options={{ year: 'numeric', month: 'short', day: 'numeric' }}
+                          />
                         </td>
                       </tr>
                     ))
