@@ -187,7 +187,7 @@ export default async function DashboardPage() {
                   </div>
 
                   {/* Trend Lines (SVG) - Approximating the screenshot */}
-                  <svg className="absolute inset-0 h-full w-full overflow-visible" preserveAspectRatio="none">
+                  <svg className="absolute inset-0 h-full w-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 600 208">
                     {/* Green line - Flat at ~25M */}
                     <polyline
                       points="0,40 100,40 200,40 300,40 400,40 500,40 600,40"
