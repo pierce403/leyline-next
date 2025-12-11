@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { useFormState, useFormStatus } from 'react-dom'; // Note: In newer Next.js/React this might be `useActionState`, but keeping to standard for now.
+import { useState, useRef, useActionState } from 'react';
+import { useFormStatus } from 'react-dom'; // Note: In newer Next.js/React this might be `useActionState`, but keeping to standard for now.
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlusCircle, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { createCompany } from "@/app/actions/companies";
@@ -26,7 +26,7 @@ const initialState = {
 
 export default function AddCompanyButton() {
     const [isOpen, setIsOpen] = useState(false);
-    const [state, dispatch] = useFormState(createCompany, initialState);
+    const [state, dispatch] = useActionState(createCompany, initialState);
     const formRef = useRef<HTMLFormElement>(null);
 
     const openModal = () => setIsOpen(true);

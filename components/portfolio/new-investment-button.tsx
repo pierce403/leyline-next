@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useState, useRef, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlusCircle, faTimes, faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
 import { createInvestment } from "@/app/actions/portfolio";
@@ -43,7 +44,7 @@ const INVESTMENT_TYPES = [
 
 export default function NewInvestmentButton({ companies }: Props) {
     const [isOpen, setIsOpen] = useState(false);
-    const [state, dispatch] = useFormState(createInvestment, initialState);
+    const [state, dispatch] = useActionState(createInvestment, initialState);
     const formRef = useRef<HTMLFormElement>(null);
 
     const openModal = () => setIsOpen(true);

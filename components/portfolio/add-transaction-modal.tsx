@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useState, useRef, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlusCircle, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { addTransaction } from "@/app/actions/add-transaction";
@@ -37,7 +37,7 @@ const TRANSACTION_TYPES = [
 export default function AddTransactionModal({ investmentId }: { investmentId: string }) {
     const [isOpen, setIsOpen] = useState(false);
     const bindAddTransaction = addTransaction.bind(null, investmentId);
-    const [state, dispatch] = useFormState(bindAddTransaction, initialState);
+    const [state, dispatch] = useActionState(bindAddTransaction, initialState);
     const formRef = useRef<HTMLFormElement>(null);
 
     const openModal = () => setIsOpen(true);

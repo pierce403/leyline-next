@@ -1,6 +1,7 @@
 'use client';
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 
 export type MigrationActionState = {
   ok: boolean;
@@ -18,18 +19,17 @@ type Props = {
 };
 
 export function RunMigrationsControl({ action, initialState }: Props) {
-  const [state, formAction] = useFormState(action, initialState);
+  const [state, formAction] = useActionState(action, initialState);
 
   return (
     <form action={formAction} className="space-y-2 text-[11px]">
       <RunButton />
       {state.message && (
         <pre
-          className={`whitespace-pre-wrap rounded border px-2 py-1 text-[10px] ${
-            state.ok
+          className={`whitespace-pre-wrap rounded border px-2 py-1 text-[10px] ${state.ok
               ? "border-emerald-200 bg-emerald-50 text-emerald-700"
               : "border-red-200 bg-red-50 text-red-700"
-          }`}
+            }`}
         >
           {state.message}
         </pre>

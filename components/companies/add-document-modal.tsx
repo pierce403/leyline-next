@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useState, useRef, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCloudUploadAlt, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { addDocument } from "@/app/actions/add-document";
@@ -27,7 +27,7 @@ const initialState = {
 export default function AddDocumentModal({ companyId }: { companyId: string }) {
     const [isOpen, setIsOpen] = useState(false);
     const bindAddDocument = addDocument.bind(null, companyId);
-    const [state, dispatch] = useFormState(bindAddDocument, initialState);
+    const [state, dispatch] = useActionState(bindAddDocument, initialState);
     const formRef = useRef<HTMLFormElement>(null);
 
     const openModal = () => setIsOpen(true);

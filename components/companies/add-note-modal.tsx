@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useState, useRef, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStickyNote, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { addNote } from "@/app/actions/add-note";
@@ -27,7 +27,7 @@ const initialState = {
 export default function AddNoteModal({ companyId }: { companyId: string }) {
     const [isOpen, setIsOpen] = useState(false);
     const bindAddNote = addNote.bind(null, companyId);
-    const [state, dispatch] = useFormState(bindAddNote, initialState);
+    const [state, dispatch] = useActionState(bindAddNote, initialState);
     const formRef = useRef<HTMLFormElement>(null);
 
     const openModal = () => setIsOpen(true);
