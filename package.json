@@ -13,31 +13,31 @@
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
-    "@auth0/nextjs-auth0": "^4.12.1",
+    "@auth0/nextjs-auth0": "^4.13.2",
     "@fortawesome/fontawesome-svg-core": "^7.1.0",
     "@fortawesome/free-regular-svg-icons": "^7.1.0",
     "@fortawesome/free-solid-svg-icons": "^7.1.0",
-    "@fortawesome/react-fontawesome": "^3.1.0",
-    "@prisma/client": "^6.19.0",
+    "@fortawesome/react-fontawesome": "^3.1.1",
+    "@prisma/client": "^6.19.1",
     "@vercel/blob": "^2.0.0",
     "jszip": "^3.10.1",
     "next": "16.0.8",
-    "prisma": "^6.19.0",
-    "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "prisma": "^6.19.1",
+    "react": "19.2.1",
+    "react-dom": "19.2.1"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/postcss": "^4.1.17",
     "@types/hapi__shot": "^6.0.0",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/node": "^25.0.0",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
     "dotenv": "^17.2.3",
-    "eslint": "^9",
-    "eslint-config-next": "16.0.3",
-    "tailwindcss": "^4",
-    "typescript": "^5",
-    "vitest": "^4.0.9"
+    "eslint": "^9.39.1",
+    "eslint-config-next": "16.0.8",
+    "tailwindcss": "^4.1.17",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.15"
   },
   "packageManager": "pnpm@10.5.2+sha512.da9dc28cd3ff40d0592188235ab25d3202add8a207afbedc682220e4a0029ffbff4562102b9e6e46b4e3f9e8bd53e6d05de48544b0c57d4b0179e22c76d1199b"
 }

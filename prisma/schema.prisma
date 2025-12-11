@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  /// Uses the Supabase Prisma URL (can be pooled or non-pooled).
   url      = env("POSTGRES_PRISMA_URL")
 }
 
