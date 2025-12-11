@@ -6,6 +6,7 @@ import { getAuth0Session } from "@/lib/auth0";
 import { getUserPortfolio, PortfolioInvestment } from "@/app/db/portfolio";
 import { getCompanies } from "@/app/db/companies";
 import NewInvestmentButton from "@/components/portfolio/new-investment-button";
+import AddTransactionModal from "@/components/portfolio/add-transaction-modal";
 
 // Mock Fallback Data
 const MOCK_INVESTMENTS: PortfolioInvestment[] = [
@@ -59,10 +60,7 @@ export default async function PortfolioPage() {
                     <FontAwesomeIcon icon={faFileLines} className="h-3 w-3" />
                     Details
                   </Link>
-                  <button className="flex items-center gap-2 rounded border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-100 active:scale-95 transition-transform">
-                    <FontAwesomeIcon icon={faPlusCircle} className="h-3 w-3" />
-                    New Transaction
-                  </button>
+                  <AddTransactionModal investmentId={inv.id} />
                 </div>
 
                 <div className="font-medium text-gray-700 truncate flex items-center gap-2">

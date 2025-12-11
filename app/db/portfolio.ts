@@ -53,3 +53,62 @@ export async function getUserPortfolio(): Promise<PortfolioInvestment[]> {
         return [];
     }
 }
+
+export type InvestmentDetail = PortfolioInvestment & {
+    companyId: string;
+    transactions: {
+        id: string;
+        transactionType: string;
+        amount: number;
+        quantity: number | null;
+        occurredAt: Date;
+    }[];
+};
+
+export async function getInvestmentDetails(investmentId: string): Promise<InvestmentDetail | null> {
+    try {
+        const session = await getAuth0Session();
+        let auth0UserId = session?.user?.sub ? (session.user.sub as string) : null;
+
+        if (!auth0UserId && process.env.NODE_ENV === 'development') {
+            auth0UserId = 'google-oauth2|112992108443057787246';
+        }
+
+        if (!auth0UserId) return null;
+
+        const user = await prisma.user.findUnique({
+            where: { auth0UserId },
+            select: { id: true },
+        });
+
+        if (!user) return null;
+
+        const investment = await prisma.investment.findUnique({
+            where: { id: investmentId },
+            include: {
+                company: {
+                    select: { name: true }
+                },
+                transactions: {
+                    orderBy: { occurredAt: 'desc' }
+                }
+            }
+        });
+
+        if (!investment || investment.userId !== user.id) return null;
+
+        return {
+            id: investment.id,
+            companyName: investment.company.name,
+            companyId: investment.companyId,
+            type: investment.investmentType,
+            owned: investment.owned,
+            value: investment.value,
+            mock: investment.mock,
+            transactions: investment.transactions
+        };
+    } catch (error) {
+        console.error("Error fetching investment details:", error);
+        return null;
+    }
+}
