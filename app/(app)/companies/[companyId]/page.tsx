@@ -38,25 +38,26 @@ const MOCK_DETAILS: Record<string, CompanyDetail> = {
 };
 
 type CompanyDetailPageProps = {
-  params: {
+  params: Promise<{
     companyId: string;
-  };
+  }>;
 };
 
 export const dynamic = 'force-dynamic';
 
 export default async function CompanyDetailPage({ params }: CompanyDetailPageProps) {
+  const { companyId } = await params;
   let company = null;
   try {
-    company = await getCompanyDetails(params.companyId);
-    console.log(`[CompanyPage] Fetched company ${params.companyId}:`, company ? 'Found' : 'Null');
+    company = await getCompanyDetails(companyId);
+    console.log(`[CompanyPage] Fetched company ${companyId}:`, company ? 'Found' : 'Null');
   } catch (err) {
     console.error(`[CompanyPage] Error fetching company:`, err);
   }
 
   // Fallback for mocks
-  if (!company && MOCK_DETAILS[params.companyId]) {
-    company = MOCK_DETAILS[params.companyId];
+  if (!company && MOCK_DETAILS[companyId]) {
+    company = MOCK_DETAILS[companyId];
   }
 
   if (!company) {
