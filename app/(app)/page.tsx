@@ -3,88 +3,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFileLines } from "@fortawesome/free-solid-svg-icons";
 import { getAuth0Session } from "@/lib/auth0";
 import { getUserDashboardEducationProgress } from "@/app/db/education";
+import { getUserPortfolio } from "@/app/db/portfolio";
 
 import { FormattedDate } from "@/components/ui/formatted-date";
 
-// Mock Data
-const investments = [
-  {
-    id: 1,
-    name: "Maxar Technologies",
-    type: "Preferred Stock",
-    owned: "0 shares",
-    value: "$0.00",
-    isMock: false,
-  },
-  {
-    id: 2,
-    name: "Polaris",
-    type: "Preferred Stock",
-    owned: "0 shares",
-    value: "$0.00",
-    isMock: false,
-  },
-  {
-    id: 3,
-    name: "Microsoft",
-    type: "Preferred Stock",
-    owned: "0 shares",
-    value: "$0.00",
-    isMock: false,
-  },
-  {
-    id: 4,
-    name: "Alibaba",
-    type: "Preferred Stock",
-    owned: "0 shares",
-    value: "$0.00",
-    isMock: false,
-  },
-  {
-    id: 5,
-    name: "Baker Hughes",
-    type: "Preferred Stock",
-    owned: "-1 shares",
-    value: "($21.20)",
-    isMock: false,
-  },
-];
-
-const mockInvestments = [
-  {
-    id: 6,
-    name: "Tencent",
-    type: "Preferred Stock",
-    owned: "1000 shares",
-    value: "$5,000,000.00",
-    isMock: true,
-  },
-  {
-    id: 7,
-    name: "Volcon / Epowersports",
-    type: "Preferred Stock",
-    owned: "200 shares",
-    value: "$125,000.00",
-    isMock: true,
-  },
-  {
-    id: 8,
-    name: "ABB",
-    type: "Convertible Note",
-    owned: "0%",
-    value: "$0.00",
-    isMock: true,
-  },
-  {
-    id: 9,
-    name: "ABB",
-    type: "Simple Agreement for Future Equity",
-    owned: "0%",
-    value: "$0.00",
-    isMock: true,
-  },
-];
-
+// Mock Reminders (keeping these as they are not part of the current task)
 const reminders = [
   {
     id: 1,
@@ -105,6 +28,16 @@ export default async function DashboardPage() {
   const auth0UserId = session?.user?.sub ? (session.user.sub as string) : undefined;
 
   let educationProgress: { id: string; name: string; percentCompleted: number; lastAccessed: Date | null }[] = [];
+  const portfolioInvestments = await getUserPortfolio();
+
+  // Separate real and mock investments
+  const realInvestments = portfolioInvestments.filter(inv => !inv.mock);
+  const mockInvestments = portfolioInvestments.filter(inv => inv.mock);
+
+  // Calculate totals
+  const totalRealValue = realInvestments.reduce((sum, inv) => sum + inv.value, 0);
+  const totalMockValue = mockInvestments.reduce((sum, inv) => sum + inv.value, 0);
+  const totalValue = totalRealValue + totalMockValue;
 
   if (auth0UserId) {
     try {
@@ -144,23 +77,31 @@ export default async function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {investments.map((inv) => (
+                  {realInvestments.length === 0 && mockInvestments.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="py-8 text-center text-gray-400 italic">
+                        No investments found. <Link href="/portfolio" className="underline hover:text-gray-600">Add one now</Link>.
+                      </td>
+                    </tr>
+                  )}
+
+                  {realInvestments.map((inv) => (
                     <tr key={inv.id} className="hover:bg-gray-50/50">
                       <td className="py-3 pl-4">
-                        <button className="flex items-center gap-2 rounded border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 active:scale-95 transition-transform">
+                        <Link href={`/portfolio/${inv.id}`} className="flex items-center gap-2 rounded border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 active:scale-95 transition-transform w-fit">
                           <FontAwesomeIcon icon={faFileLines} className="h-3 w-3" />
                           Details
-                        </button>
+                        </Link>
                       </td>
                       <td className="px-4 py-3">
                         <div className="font-semibold text-gray-700">
-                          {inv.name}
+                          {inv.companyName}
                         </div>
                         <div className="text-xs text-gray-500">{inv.type}</div>
                       </td>
-                      <td className="px-4 py-3 text-gray-600">{inv.owned}</td>
+                      <td className="px-4 py-3 text-gray-600">{inv.owned} shares</td>
                       <td className="px-4 py-3 text-right font-medium text-gray-700">
-                        {inv.value}
+                        ${inv.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                     </tr>
                   ))}
@@ -169,15 +110,15 @@ export default async function DashboardPage() {
                   {mockInvestments.map((inv) => (
                     <tr key={inv.id} className="hover:bg-gray-50/50 bg-gray-50/30">
                       <td className="py-3 pl-4">
-                        <button className="flex items-center gap-2 rounded border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 active:scale-95 transition-transform">
+                        <Link href={`/portfolio/${inv.id}`} className="flex items-center gap-2 rounded border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 active:scale-95 transition-transform w-fit">
                           <FontAwesomeIcon icon={faFileLines} className="h-3 w-3" />
                           Details
-                        </button>
+                        </Link>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-gray-700">
-                            {inv.name}
+                            {inv.companyName}
                           </span>
                           <span className="rounded bg-sky-400 px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
                             Mock
@@ -185,9 +126,9 @@ export default async function DashboardPage() {
                         </div>
                         <div className="text-xs text-gray-500">{inv.type}</div>
                       </td>
-                      <td className="px-4 py-3 text-gray-600">{inv.owned}</td>
+                      <td className="px-4 py-3 text-gray-600">{inv.owned} shares</td>
                       <td className="px-4 py-3 text-right font-medium text-gray-700">
-                        {inv.value}
+                        ${inv.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                     </tr>
                   ))}
@@ -203,12 +144,14 @@ export default async function DashboardPage() {
               <div className="mb-6 flex justify-center gap-4 text-xs font-semibold">
                 <div className="flex items-center gap-1.5">
                   <div className="h-3 w-8 bg-[#2ecc71] rounded-sm"></div>
-                  <span className="text-gray-600">Investments</span>
+                  <span className="text-gray-600">Investments (${totalRealValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })})</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="h-3 w-8 bg-[#3498db] rounded-sm"></div>
-                  <span className="text-gray-600">Mock Investments</span>
-                </div>
+                {totalMockValue > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-3 w-8 bg-[#3498db] rounded-sm"></div>
+                    <span className="text-gray-600">Mock Investments (${totalMockValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })})</span>
+                  </div>
+                )}
               </div>
 
               {/* Simulated Chart Container */}
