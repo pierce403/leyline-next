@@ -44,7 +44,13 @@ type CompanyDetailPageProps = {
 };
 
 export default async function CompanyDetailPage({ params }: CompanyDetailPageProps) {
-  let company = await getCompanyDetails(params.companyId);
+  let company = null;
+  try {
+    company = await getCompanyDetails(params.companyId);
+    console.log(`[CompanyPage] Fetched company ${params.companyId}:`, company ? 'Found' : 'Null');
+  } catch (err) {
+    console.error(`[CompanyPage] Error fetching company:`, err);
+  }
 
   // Fallback for mocks
   if (!company && MOCK_DETAILS[params.companyId]) {
