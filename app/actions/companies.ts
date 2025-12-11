@@ -32,15 +32,16 @@ export async function createCompany(prevState: CreateCompanyState, formData: For
                 name: name.trim(),
                 location: location?.trim() || null,
                 type: type?.trim() || null,
+                tags: [],
             },
         });
 
         revalidatePath("/companies");
         return { message: "success" };
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to create company:", error);
         return {
-            message: "Database Error: Failed to create company.",
+            message: `Database Error: Failed to create company. ${error.message}`,
         };
     }
 }
