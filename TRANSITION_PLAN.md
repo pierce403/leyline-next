@@ -17,6 +17,7 @@ The future coding agent should be able to implement the new app **without openin
 
 - [ ] Recreate Leyline’s public pages (login, register, terms, privacy, welcome, landing).
 - [ ] Recreate the authenticated main application (Dashboard, Education, Companies, Portfolio, Profile, Account).
+  - [x] Implement Dashboard UI (Investments, Education Progress, Reminders, Portfolio Chart).
 - [ ] Recreate the admin area (Users, Registration, Invitations, Education content management, Subscriptions/Transactions, Settings).
 - [ ] Implement Auth0‑based authentication and user access levels (Free, Basic, Pro, plus internal admin roles).
 - [ ] Implement Stripe‑based subscription billing and plan changes.
