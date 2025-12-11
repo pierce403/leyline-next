@@ -61,3 +61,19 @@ Before finishing any substantial change:
   - Ensure `pnpm lint`, `pnpm test`, and `pnpm build` have been run (when relevant).
   - Commit the changes with a concise, descriptive message.
   - Push the commit to the default remote branch so GitHub and Vercel stay in sync.
+
+## Database Migrations
+
+- Use **Prisma** for database schema management.
+- The project uses Supabase with a connection pooler.
+- For schema changes:
+  - Modify `prisma/schema.prisma`.
+  - Use `prisma migrate dev` to generate and apply migrations locally/in development.
+  - **IMPORTANT:** Prisma migrations require a direct database connection (not the pooler).
+  - You must set the correct env var to bypass the pooler when running migrations:
+    ```bash
+    export POSTGRES_PRISMA_URL="$POSTGRES_URL_NON_POOLING"
+    npx prisma migrate dev --name <migration_name>
+    ```
+  - `prisma db push` can be used for rapid prototyping but `migrate dev` is preferred for tracking history.
+  - If `prisma migrate dev` hangs, check that you are using the non-pooling URL.
