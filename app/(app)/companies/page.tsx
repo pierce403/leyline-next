@@ -2,6 +2,7 @@ import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 import { getCompanies } from "@/app/db/companies";
+import AddCompanyButton from "@/components/companies/add-company-button";
 
 // Mock data to ensure it looks like the screenshot if DB is empty
 const MOCK_COMPANIES = [
@@ -25,10 +26,7 @@ export default async function CompaniesPage() {
         <h1 className="mb-4 text-2xl font-normal text-gray-600 uppercase tracking-wide">
           Companies
         </h1>
-        <button className="inline-flex items-center gap-2 rounded border border-sky-400 bg-white px-4 py-1.5 text-sm font-medium text-sky-500 hover:bg-sky-50 transition-colors">
-          <FontAwesomeIcon icon={faPlusCircle} className="h-4 w-4" />
-          Add New Company
-        </button>
+        <AddCompanyButton />
       </div>
 
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
