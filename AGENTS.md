@@ -94,3 +94,18 @@ Before finishing any substantial change:
   - We inject a specific mock `auth0UserId` (e.g., from the seed data) in the server actions when `session.user` is missing AND `NODE_ENV` is 'development'.
   - This allows the browser subagent to perform full end-to-end writes to the local database.
   - **Important**: Ensure this logic is strictly guarded by checks for `process.env.NODE_ENV === 'development'` to prevent security risks in production.
+
+## React 19 / Next.js Compatibility
+
+- **Hook Migration**:
+  - Use `useActionState` from `react` instead of `useFormState` from `react-dom`. The latter is deprecated/renamed in recent React/Next.js versions.
+  - Ensure imports are updated to: `import { useActionState } from 'react';`.
+  - `useFormStatus` should still be imported from `react-dom`.
+
+## UI/UX & Components
+
+- **SVG Charts**:
+  - When using inline SVGs for charts (like in the dashboard), always include a `viewBox` attribute (e.g., `viewBox="0 0 width height"`). This ensures the SVG content scales correctly and prevents overflow issues across different resolutions.
+- **Client-Side Filtering**:
+  - For lists (e.g., companies) or dropdowns (e.g., company selection), prefer client-side filtering for better UX if the dataset is reasonably small.
+  - Custom Combobox components can be created to replace standard `<select>` elements when search/filter functionality is needed.
