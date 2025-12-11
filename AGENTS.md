@@ -77,3 +77,14 @@ Before finishing any substantial change:
     ```
   - `prisma db push` can be used for rapid prototyping but `migrate dev` is preferred for tracking history.
   - If `prisma migrate dev` hangs, check that you are using the non-pooling URL.
+
+## Testing Methodology
+
+- **Browser Subagent Testing**:
+  - We use a browser subagent to perform end-to-end tests locally before pushing changes.
+  - This involves navigating through the actual UI flow (e.g., clicking links, buttons) to verify functionality.
+  - **Handling Mock vs Real Data scenarios**:
+    - When testing without a full database or auth session, the app may fall back to `MOCK_COMPANIES` or `MOCK_DETAILS`.
+    - It is crucial to ensure that links and data fetching logic handle both UUIDs (from real DB) and mock IDs (string integers like '1', '2') correctly.
+    - Specifically, verify that pages expecting dynamic `params` (like `[companyId]`) can gracefully fallback to mock data when database lookups fail or return null.
+  - Always verify the browser subagent's success by checking the captured screenshots, not just the text logs.
