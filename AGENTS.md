@@ -88,3 +88,9 @@ Before finishing any substantial change:
     - It is crucial to ensure that links and data fetching logic handle both UUIDs (from real DB) and mock IDs (string integers like '1', '2') correctly.
     - Specifically, verify that pages expecting dynamic `params` (like `[companyId]`) can gracefully fallback to mock data when database lookups fail or return null.
   - Always verify the browser subagent's success by checking the captured screenshots, not just the text logs.
+
+- **User Injection for Development**:
+  - To test authenticated actions (like adding companies, notes, documents) without a full Auth0 session in local development:
+  - We inject a specific mock `auth0UserId` (e.g., from the seed data) in the server actions when `session.user` is missing AND `NODE_ENV` is 'development'.
+  - This allows the browser subagent to perform full end-to-end writes to the local database.
+  - **Important**: Ensure this logic is strictly guarded by checks for `process.env.NODE_ENV === 'development'` to prevent security risks in production.

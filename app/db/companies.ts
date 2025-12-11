@@ -11,7 +11,13 @@ export type CompanySummary = {
 export async function getCompanies(): Promise<CompanySummary[]> {
     try {
         const session = await getAuth0Session();
-        const auth0UserId = session?.user?.sub ? (session.user.sub as string) : null;
+        let auth0UserId = session?.user?.sub ? (session.user.sub as string) : null;
+
+        // Inject mock user for local development testing
+        if (!auth0UserId && process.env.NODE_ENV === 'development') {
+            console.log("Using Mock User for Development");
+            auth0UserId = 'google-oauth2|112992108443057787246';
+        }
 
         if (!auth0UserId) return [];
 

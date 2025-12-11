@@ -14,6 +14,8 @@ import { getCompanyDetails, CompanyDetail } from "@/app/db/companies";
 import { FormattedDate } from "@/components/ui/formatted-date";
 import DeleteCompanyButton from "@/components/companies/delete-company-button";
 import EditCompanyButton from "@/components/companies/edit-company-button";
+import AddDocumentModal from "@/components/companies/add-document-modal";
+import AddNoteModal from "@/components/companies/add-note-modal";
 
 // Mock Fallback Data (for demo IDs 1-7)
 const MOCK_DETAILS: Record<string, CompanyDetail> = {
@@ -73,14 +75,8 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
         </h1>
         <div className="flex justify-center gap-3">
           <EditCompanyButton company={company} />
-          <button className="flex items-center gap-2 rounded border border-sky-400 bg-white px-3 py-1.5 text-xs font-medium text-sky-500 hover:bg-sky-50 transition-colors">
-            <FontAwesomeIcon icon={faCloudUploadAlt} className="h-3 w-3" />
-            Upload Document
-          </button>
-          <button className="flex items-center gap-2 rounded border border-sky-400 bg-white px-3 py-1.5 text-xs font-medium text-sky-500 hover:bg-sky-50 transition-colors">
-            <FontAwesomeIcon icon={faStickyNote} className="h-3 w-3" />
-            New Note
-          </button>
+          <AddDocumentModal companyId={company.id} />
+          <AddNoteModal companyId={company.id} />
           <DeleteCompanyButton companyId={company.id} />
         </div>
       </div>
@@ -255,4 +251,3 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
     </div>
   );
 }
-
