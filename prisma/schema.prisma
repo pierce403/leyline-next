@@ -38,6 +38,7 @@ model User {
 
   // Portfolio
   investments           Investment[]
+  companies             Company[]
 
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt
@@ -289,12 +290,14 @@ enum LessonProgressStatus {
 /// Company that users can add to their portfolio.
 model Company {
   id          String        @id @default(uuid())
+  userId      String?       // Optional for migration safety, but app will enforce
   name        String
   type        String?
   location    String?
   notes       String?       // Keeping for backward compat or summary
   tags        String[]
 
+  user        User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
   investments Investment[]
   documents   CompanyDocument[]
   companyNotes CompanyNote[]

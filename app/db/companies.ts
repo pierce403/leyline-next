@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getAuth0Session } from "@/lib/auth0";
 
 export type CompanySummary = {
     id: string;
@@ -9,7 +10,25 @@ export type CompanySummary = {
 
 export async function getCompanies(): Promise<CompanySummary[]> {
     try {
+        const session = await getAuth0Session();
+        const auth0UserId = session?.user?.sub ? (session.user.sub as string) : null;
+
+        if (!auth0UserId) return [];
+
+        const user = await prisma.user.findUnique({
+            where: { auth0UserId },
+            select: { id: true },
+        });
+
+        if (!user) return [];
+
         const companies = await prisma.company.findMany({
+            where: {
+                OR: [
+                    { userId: user.id },
+                    { userId: null } // Optional: Keep seeing global/legacy companies, or remove this line to STRICTLY ONLY see own.
+                ]
+            },
             orderBy: {
                 name: 'asc'
             },
