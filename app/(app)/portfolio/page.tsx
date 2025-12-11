@@ -19,22 +19,10 @@ const MOCK_INVESTMENTS: PortfolioInvestment[] = [
 ];
 
 export default async function PortfolioPage() {
-  const session = await getAuth0Session();
-  const userId = session?.user?.sub ? (session.user.sub as string) : null;
   const companies = await getCompanies();
+  const dbInvestments = await getUserPortfolio();
 
-  let investments: PortfolioInvestment[] = [];
-
-  if (userId) {
-    const dbInvestments = await getUserPortfolio(userId);
-    if (dbInvestments.length > 0) {
-      investments = dbInvestments;
-    } else {
-      investments = MOCK_INVESTMENTS;
-    }
-  } else {
-    investments = MOCK_INVESTMENTS;
-  }
+  const investments = dbInvestments.length > 0 ? dbInvestments : MOCK_INVESTMENTS;
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 lg:px-8 bg-gray-50/10 min-h-screen">

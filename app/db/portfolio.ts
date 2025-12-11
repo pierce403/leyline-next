@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getAuth0Session } from "@/lib/auth0";
 
 export type PortfolioInvestment = {
     id: string;
@@ -9,23 +10,46 @@ export type PortfolioInvestment = {
     mock: boolean;
 };
 
-export async function getUserPortfolio(userId: string): Promise<PortfolioInvestment[]> {
-    const investments = await prisma.investment.findMany({
-        where: { userId },
-        include: {
-            company: {
-                select: { name: true }
-            }
-        },
-        orderBy: { createdAt: 'desc' }
-    });
+export async function getUserPortfolio(): Promise<PortfolioInvestment[]> {
+    try {
+        const session = await getAuth0Session();
+        let auth0UserId = session?.user?.sub ? (session.user.sub as string) : null;
 
-    return investments.map(inv => ({
-        id: inv.id,
-        companyName: inv.company.name,
-        type: inv.investmentType,
-        owned: inv.owned,
-        value: inv.value,
-        mock: inv.mock
-    }));
+        // Inject mock user for local development testing
+        if (!auth0UserId && process.env.NODE_ENV === 'development') {
+            // console.log("Using Mock User for Development in getUserPortfolio");
+            auth0UserId = 'google-oauth2|112992108443057787246';
+        }
+
+        if (!auth0UserId) return [];
+
+        const user = await prisma.user.findUnique({
+            where: { auth0UserId },
+            select: { id: true },
+        });
+
+        if (!user) return [];
+
+        const investments = await prisma.investment.findMany({
+            where: { userId: user.id },
+            include: {
+                company: {
+                    select: { name: true }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        return investments.map(inv => ({
+            id: inv.id,
+            companyName: inv.company.name,
+            type: inv.investmentType,
+            owned: inv.owned,
+            value: inv.value,
+            mock: inv.mock
+        }));
+    } catch (error) {
+        console.error("Error fetching user portfolio:", error);
+        return [];
+    }
 }
