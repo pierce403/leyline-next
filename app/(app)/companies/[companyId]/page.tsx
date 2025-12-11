@@ -43,6 +43,8 @@ type CompanyDetailPageProps = {
   };
 };
 
+export const dynamic = 'force-dynamic';
+
 export default async function CompanyDetailPage({ params }: CompanyDetailPageProps) {
   let company = null;
   try {
