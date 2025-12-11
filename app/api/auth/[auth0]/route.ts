@@ -12,16 +12,16 @@ export const GET = async (
         switch (auth0) {
             case "login":
                 // @ts-ignore
-                return await client.handleLogin(req);
+                return await client.authClient.handleLogin(req);
             case "logout":
                 // @ts-ignore
-                return await client.handleLogout(req);
+                return await client.authClient.handleLogout(req);
             case "callback":
                 // @ts-ignore
-                return await client.handleCallback(req);
+                return await client.authClient.handleCallback(req);
             case "me":
                 // @ts-ignore
-                return await client.handleProfile(req);
+                return await client.authClient.handleProfile(req);
             default:
                 return new NextResponse("Not Found", { status: 404 });
         }
