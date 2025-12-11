@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFileLines } from "@fortawesome/free-solid-svg-icons";
+import { getAuth0Session } from "@/lib/auth0";
+import { getUserDashboardEducationProgress } from "@/app/db/education";
 
 // Mock Data
 const investments = [
@@ -96,13 +98,20 @@ const reminders = [
   },
 ];
 
-const courses = [
-  // Keeping it empty implies no incomplete items or just mock empty for now if not specified
-  // Screenshot shows header "Educational Progress" but table is empty or has headers.
-  // Actually screenshot 1 shows an empty table under Educational Progress (headers only).
-];
+export default async function DashboardPage() {
+  const session = await getAuth0Session();
+  const auth0UserId = session?.user?.sub ? (session.user.sub as string) : undefined;
 
-export default function DashboardPage() {
+  let educationProgress: { id: string; name: string; percentCompleted: number; lastAccessed: Date | null }[] = [];
+
+  if (auth0UserId) {
+    try {
+      educationProgress = await getUserDashboardEducationProgress(auth0UserId);
+    } catch (e) {
+      console.error("Failed to fetch education progress:", e);
+    }
+  }
+
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 lg:px-8 bg-gray-50/50 min-h-screen">
       {/* Page Layout */}
@@ -291,12 +300,32 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {/* Empty state or items */}
-                  <tr>
-                    <td colSpan={3} className="py-8 text-center text-gray-400 text-xs italic">
-                      No active programs
-                    </td>
-                  </tr>
+                  {educationProgress.length > 0 ? (
+                    educationProgress.map((prog) => (
+                      <tr key={prog.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 font-medium text-gray-700">
+                          {prog.name}
+                        </td>
+                        <td className="px-4 py-3 text-right text-gray-600">
+                          {prog.percentCompleted.toFixed(0)}%
+                        </td>
+                        <td className="px-4 py-3 text-right text-gray-500 text-xs">
+                          {prog.lastAccessed ? new Date(prog.lastAccessed).toLocaleDateString(undefined, {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          }) : 'Never'}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    /* Empty state or items */
+                    <tr>
+                      <td colSpan={3} className="py-8 text-center text-gray-400 text-xs italic">
+                        No active programs
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
