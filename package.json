@@ -13,15 +13,15 @@
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
-    "@auth0/nextjs-auth0": "^4.13.2",
+    "@auth0/nextjs-auth0": "^4.18.0",
     "@fortawesome/fontawesome-svg-core": "^7.1.0",
     "@fortawesome/free-regular-svg-icons": "^7.1.0",
     "@fortawesome/free-solid-svg-icons": "^7.1.0",
     "@fortawesome/react-fontawesome": "^3.1.1",
     "@prisma/client": "^6.19.1",
-    "@vercel/blob": "^2.0.0",
+    "@vercel/blob": "^2.1.0",
     "jszip": "^3.10.1",
-    "next": "16.0.10",
+    "next": "16.4.0",
     "prisma": "^6.19.1",
     "react": "19.2.1",
     "react-dom": "19.2.1"
@@ -37,7 +37,14 @@
     "eslint-config-next": "16.0.8",
     "tailwindcss": "^4.1.17",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.15"
+    "vite": "7.3.7",
+    "vitest": "^4.1.11"
+  },
+  "pnpm": {
+    "overrides": {
+      "@prisma/config@6.19.1>effect": "3.20.0",
+      "@prisma/config@6.19.1>deepmerge-ts": "8.0.2"
+    }
   },
   "packageManager": "pnpm@10.5.2+sha512.da9dc28cd3ff40d0592188235ab25d3202add8a207afbedc682220e4a0029ffbff4562102b9e6e46b4e3f9e8bd53e6d05de48544b0c57d4b0179e22c76d1199b"
 }
